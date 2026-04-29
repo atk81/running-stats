@@ -1,0 +1,28 @@
+# Prototype (design reference only)
+runstats/
+
+# Dependencies
+node_modules/
+.next/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vercel/Build
+*.tsbuildinfo
+next-env.d.ts
