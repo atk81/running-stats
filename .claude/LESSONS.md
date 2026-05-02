@@ -36,6 +36,7 @@
 
 - **`plan.md` schema-reference tables can drift from reality during deployment.** When IaC apply forces a schema change (e.g. row-size shrinks), do NOT silently edit `plan.md` outside Stage 4 — flag the drift in the PR description and reconcile in the downstream phase that ports schema to code (e.g. `lib/appwrite/collections.ts`).
 - **No CI workflows configured yet → `gh pr checks` reports `no checks reported on the 'main' branch`.** Treated as green. Once GitHub Actions are added, Stage 6 `--watch` will block as designed.
+- **When `plan.md` description and prototype source disagree, the prototype wins.** Plan text is intent; the prototype's CSS/JSX is the actually-tested implementation. **Why:** PR #4 task said "Bebas Neue, Inter, JetBrains Mono, Anton, Caveat, Permanent Marker" but prototype CSS actually used Bebas Neue + Archivo Narrow + Space Grotesk + Inter + JetBrains Mono. Prototype's 5 are load-bearing for the design; plan's extras (Anton, Caveat, Permanent Marker) are template-decorative. **How to apply:** before any frontend port, read the prototype CSS/JSX first; treat plan.md's font/component lists as a "must include at least these" floor, not the exact set. Load the union and flag the drift in the PR.
 
 ## Next.js 16
 
