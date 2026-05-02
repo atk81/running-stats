@@ -22,11 +22,11 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 ## Phase 1: Foundation (Week 1-2)
 
 ### Project Setup
-- [ ] Initialize Next.js project with TypeScript
-- [ ] Install and configure Tailwind CSS
-- [ ] Install Appwrite SDK (`appwrite`, `node-appwrite`)
-- [ ] Install TanStack Query (`@tanstack/react-query`)
-- [ ] Copy SVG assets from prototype to `public/assets/`
+- [x] Initialize Next.js project with TypeScript
+- [x] Install and configure Tailwind CSS
+- [x] Install Appwrite SDK (`appwrite`, `node-appwrite`)
+- [x] Install TanStack Query (`@tanstack/react-query`)
+- [x] Copy SVG assets from prototype to `public/assets/`
 
 ### Appwrite Setup
 - [ ] Create Appwrite project `runstats`
