@@ -51,6 +51,6 @@ export function getProjectId(): string {
   return requireEnv("NEXT_PUBLIC_APPWRITE_PROJECT_ID");
 }
 
-export const SESSION_COOKIE_NAME = (() => {
-  return `a_session_${requireEnv("NEXT_PUBLIC_APPWRITE_PROJECT_ID")}`;
-})();
+export function getSessionCookieName(): string {
+  return `a_session_${getProjectId()}`;
+}
