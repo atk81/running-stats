@@ -58,7 +58,7 @@ export function AuthedHome() {
             fontWeight: 400,
           }}
         >
-          YOU'RE
+          YOU&apos;RE
           <br />
           <span style={{ color: accent }}>CONNECTED.</span>
         </h1>
