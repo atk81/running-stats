@@ -41,9 +41,9 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 - [x] Set up document-level permissions on all collections
 
 ### Design System
-- [ ] Port `colors_and_type.css` to `globals.css` (CSS custom properties + keyframes)
-- [ ] Configure Tailwind with design tokens (colors, fonts, spacing, radii, shadows)
-- [ ] Set up Google Fonts (Bebas Neue, Inter, JetBrains Mono, Anton, Caveat, Permanent Marker)
+- [x] Port `colors_and_type.css` to `globals.css` (CSS custom properties + keyframes)
+- [x] Configure Tailwind with design tokens (colors, fonts, spacing, radii, shadows)
+- [x] Set up Google Fonts (Bebas Neue, Inter, JetBrains Mono, Anton, Caveat, Permanent Marker)
 
 ### Primitive Components
 - [ ] Port `Button` component to TSX
