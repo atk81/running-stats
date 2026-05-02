@@ -21,6 +21,7 @@
 - **Appwrite row size cap = 65,535 bytes; utf8mb4 strings cost 4 bytes/char.** A `string(8192)` attribute consumes 32,768 bytes. Two of them + a `string(4096)` polyline = 81,920 bytes → exceeds cap. **Why:** PR #2 hit this on `activities.bestEfforts` + `splitsMetric`. **How to apply:** keep total of all string `size` × 4 under ~60K. For JSON blobs, default to size 4096; only go higher with a row-budget calc.
 - **Appwrite project IDs are public, not secrets.** They appear in client SDK init + URLs. Safe to commit in `appwrite.json`. API keys and admin tokens are NOT — those go in `.env*` (gitignored).
 - **`appwrite push collection` is interactive and has no `--all` flag.** For non-interactive scripted apply, call individual `appwrite databases create-X-attribute` / `create-index` commands per attr/index.
+- **For OAuth-only auth flows, derive Appwrite userId deterministically from the provider's stable numeric ID.** e.g. `s{stravaAthleteId}` — Strava athlete IDs are globally unique integers, prefix `s` keeps the ID Appwrite-valid. **Why:** PR #6 spec originally said "on `users.create` 409 conflict, look up existing user by email" — but if userId is deterministic, the 409-catch can simply fall through to upsert. Eliminates one round-trip on every returning-user signin. **How to apply:** when user identity is owned by an external OAuth provider (not the user's own password), set Appwrite userId from provider data, not `ID.unique()`. Catch 409 with `err instanceof AppwriteException && err.code === 409` and continue.
 
 ## GitHub / gh CLI
 
@@ -41,6 +42,14 @@
 ## Next.js 16
 
 - **Next.js 16 has breaking API changes vs training-data-era Next.js.** The scaffold's `AGENTS.md` flags this explicitly. **How to apply:** before writing or porting any Next.js component, page, or route, check `node_modules/next/dist/docs/` for the relevant guide. Don't trust prior knowledge of `app/` conventions blindly.
+
+## TypeScript / lib.dom
+
+- **Modern `lib.dom.d.ts` types `Uint8Array` as `Uint8Array<ArrayBufferLike>`, not `Uint8Array<ArrayBuffer>`.** Web Crypto APIs (`crypto.subtle.importKey`, `encrypt`, `decrypt`) require `BufferSource` which excludes `SharedArrayBuffer`. Build error: `Type 'SharedArrayBuffer' is missing the following properties from type 'ArrayBuffer': resizable, resize, detached, transfer, transferToFixedLength`. **Why:** PR #6 hit this on `encryption.ts` first build. **How to apply:** when constructing typed arrays for Web Crypto, use `new Uint8Array(new ArrayBuffer(N))` and type return as `Uint8Array<ArrayBuffer>`. Plain `new Uint8Array(N)` widens to `ArrayBufferLike` and TS rejects it at the crypto-API boundary.
+
+## Next.js 16 — build-time env reads
+
+- **Top-level `process.env.X` reads (or IIFEs that read env) crash `next build` page-data collection if the var isn't set at build time.** **Why:** PR #6 had `export const SESSION_COOKIE_NAME = (() => requireEnv(...))()` in `lib/appwrite/server.ts`; build worker imports the module to collect page data, the IIFE throws, build fails with `Failed to collect page data for /api/auth/logout`. **How to apply:** server-side env reads must be lazy (function call from inside the request handler), not eager constants. `NEXT_PUBLIC_*` vars are inlined at build time so eager use is fine; secrets and server-only IDs must be lazy.
 
 ## React 19 / ESLint
 
