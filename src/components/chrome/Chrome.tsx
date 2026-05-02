@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { Wordmark } from "@/components/chrome/Wordmark";
 import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 import { useUser } from "@/lib/hooks/useUser";
 
@@ -48,13 +48,11 @@ function formatLastSync(lastSyncAt: string | null | undefined): string {
 }
 
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/dashboard") {
-    return pathname === "/dashboard" || pathname === "/goals";
-  }
-  if (href === "/milestones") {
-    return pathname === "/milestones" || pathname.startsWith("/milestone/");
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
+  if (pathname === href) return true;
+  if (pathname.startsWith(`${href}/`)) return true;
+  if (href === "/dashboard" && pathname === "/goals") return true;
+  if (href === "/milestones" && pathname.startsWith("/milestone/")) return true;
+  return false;
 }
 
 export function Chrome({ children }: ChromeProps) {
@@ -82,28 +80,7 @@ export function Chrome({ children }: ChromeProps) {
           gap: 40,
         }}
       >
-        <Link
-          href="/dashboard"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            color: "var(--bone)",
-            textDecoration: "none",
-          }}
-        >
-          <Image src="/assets/monogram.svg" width={26} height={26} alt="" />
-          <span
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: 24,
-              letterSpacing: "-0.02em",
-              lineHeight: 1,
-            }}
-          >
-            RUNSTATS<span style={{ color: accent }}>.</span>
-          </span>
-        </Link>
+        <Wordmark size="sm" accent={accent} href="/dashboard" />
 
         <nav style={{ display: "flex", gap: 28 }}>
           {NAV_LINKS.map((l) => {

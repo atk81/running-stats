@@ -19,7 +19,7 @@ export function SignOutButton({ className }: SignOutButtonProps) {
     } catch (err) {
       console.error("sign out: logout request failed", err);
     }
-    queryClient.setQueryData(["me"], null);
+    queryClient.clear();
     window.location.href = "/";
   }
 

@@ -1,10 +1,8 @@
-"use client";
-
 import Image from "next/image";
-import { Button, Icon, Pill } from "@/components/primitives";
+import { Icon, Pill } from "@/components/primitives";
+import { Wordmark } from "@/components/chrome/Wordmark";
 import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 
-const ACCENT = DEFAULT_ACCENT_COLOR;
 const STRAVA_OAUTH_PATH = "/api/auth/strava";
 
 const FEATURE_BULLETS = [
@@ -13,11 +11,22 @@ const FEATURE_BULLETS = [
   "No data sold. ever.",
 ];
 
-export function ConnectScreen() {
-  function startOAuth() {
-    window.location.href = STRAVA_OAUTH_PATH;
-  }
+const stravaButtonStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "14px 26px",
+  fontFamily: "var(--font-body)",
+  fontSize: 16,
+  fontWeight: 600,
+  borderRadius: 12,
+  background: "#FC4C02",
+  color: "var(--accent-fg)",
+  textDecoration: "none",
+  boxShadow: "0 4px 16px rgba(252,76,2,0.28)",
+} as const;
 
+export function ConnectScreen() {
   return (
     <div
       style={{
@@ -40,18 +49,7 @@ export function ConnectScreen() {
           zIndex: 2,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Image src="/assets/monogram.svg" width={32} height={32} alt="" />
-          <span
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: 28,
-              letterSpacing: "-0.02em",
-            }}
-          >
-            RUNSTATS<span style={{ color: ACCENT }}>.</span>
-          </span>
-        </div>
+        <Wordmark size="md" accent={DEFAULT_ACCENT_COLOR} />
 
         <div>
           <h1
@@ -69,7 +67,7 @@ export function ConnectScreen() {
             <br />
             WORTH
             <br />
-            <span style={{ color: ACCENT }}>SHARING.</span>
+            <span style={{ color: DEFAULT_ACCENT_COLOR }}>SHARING.</span>
           </h1>
           <p
             style={{
@@ -92,7 +90,7 @@ export function ConnectScreen() {
               alignItems: "center",
             }}
           >
-            <Button variant="strava" size="lg" onClick={startOAuth}>
+            <a href={STRAVA_OAUTH_PATH} style={stravaButtonStyle}>
               <Image
                 src="/assets/strava-mark.svg"
                 width={20}
@@ -101,7 +99,7 @@ export function ConnectScreen() {
                 style={{ borderRadius: 4 }}
               />
               Connect Strava
-            </Button>
+            </a>
             <span
               style={{
                 fontFamily: "var(--font-mono)",
@@ -133,7 +131,7 @@ export function ConnectScreen() {
                   gap: 8,
                 }}
               >
-                <Icon name="check" size={14} color={ACCENT} />
+                <Icon name="check" size={14} color={DEFAULT_ACCENT_COLOR} />
                 {b}
               </span>
             ))}
@@ -149,12 +147,12 @@ export function ConnectScreen() {
             color: "var(--fg-3)",
           }}
         >
-          <span>v0.3 · public beta</span>
           <span>github.com/atk81/running-stats</span>
         </div>
       </div>
 
       <div
+        aria-hidden="true"
         style={{
           position: "relative",
           padding: 48,
@@ -168,7 +166,6 @@ export function ConnectScreen() {
           width="100%"
           height="100%"
           style={{ position: "absolute", inset: 0, opacity: 0.05 }}
-          aria-hidden="true"
         >
           <defs>
             <pattern id="rs-connect-grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -218,7 +215,7 @@ export function ConnectScreen() {
                     lineHeight: 0.9,
                   }}
                 >
-                  21<span style={{ color: ACCENT }}>:</span>49
+                  21<span style={{ color: DEFAULT_ACCENT_COLOR }}>:</span>49
                 </div>
                 <div
                   style={{
@@ -242,10 +239,10 @@ export function ConnectScreen() {
                   letterSpacing: "-0.02em",
                 }}
               >
-                RUNSTATS<span style={{ color: ACCENT }}>.</span>
+                RUNSTATS<span style={{ color: DEFAULT_ACCENT_COLOR }}>.</span>
               </div>
             </div>
-            <div style={{ background: ACCENT, position: "relative" }}>
+            <div style={{ background: DEFAULT_ACCENT_COLOR, position: "relative" }}>
               <Image
                 src="/assets/placeholder-portrait.svg"
                 alt=""

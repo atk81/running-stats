@@ -1,18 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/primitives";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { Wordmark } from "@/components/chrome/Wordmark";
 import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 import { useUser } from "@/lib/hooks/useUser";
 
-const ACCENT = DEFAULT_ACCENT_COLOR;
+const dashboardLinkStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "14px 26px",
+  fontFamily: "var(--font-body)",
+  fontSize: 16,
+  fontWeight: 600,
+  borderRadius: 12,
+  background: "var(--ignite)",
+  color: "var(--accent-fg)",
+  textDecoration: "none",
+  boxShadow: "0 4px 16px rgba(255,104,0,0.28)",
+} as const;
 
 export function AuthedHome() {
   const { user, loading } = useUser();
   const handle = user?.handle ?? "";
-  const accent = user?.accentColor || ACCENT;
+  const accent = user?.accentColor || DEFAULT_ACCENT_COLOR;
 
   return (
     <div
@@ -35,18 +47,7 @@ export function AuthedHome() {
           gap: 24,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Image src="/assets/monogram.svg" width={32} height={32} alt="" />
-          <span
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: 28,
-              letterSpacing: "-0.02em",
-            }}
-          >
-            RUNSTATS<span style={{ color: accent }}>.</span>
-          </span>
-        </div>
+        <Wordmark size="md" accent={accent} />
         <h1
           style={{
             fontFamily: "var(--font-display)",
@@ -87,10 +88,8 @@ export function AuthedHome() {
             marginTop: 8,
           }}
         >
-          <Link href="/dashboard" style={{ textDecoration: "none" }}>
-            <Button variant="primary" size="lg">
-              Open dashboard
-            </Button>
+          <Link href="/dashboard" style={dashboardLinkStyle}>
+            Open dashboard
           </Link>
           <SignOutButton />
         </div>

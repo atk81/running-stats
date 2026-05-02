@@ -1,3 +1,4 @@
+import { ComingSoon } from "@/components/chrome/ComingSoon";
 import { Label } from "@/components/primitives";
 
 const PROCAM_SERIES = [
@@ -8,30 +9,11 @@ const PROCAM_SERIES = [
 
 export default function EventsPage() {
   return (
-    <div style={{ maxWidth: 1280, margin: "0 auto", padding: "72px 32px" }}>
-      <Label>Coming soon</Label>
-      <h1
-        style={{
-          fontFamily: "var(--font-heading)",
-          fontSize: 48,
-          fontWeight: 700,
-          margin: "8px 0 12px",
-          color: "var(--bone)",
-        }}
-      >
-        Events
-      </h1>
-      <p
-        style={{
-          fontFamily: "var(--font-body)",
-          color: "var(--fg-3)",
-          fontSize: 16,
-          maxWidth: 560,
-        }}
-      >
-        Multi-leg race series like Procam with their own visual treatment.
-        We&apos;re designing this after v1.
-      </p>
+    <ComingSoon
+      eyebrow="Coming soon"
+      title="Events"
+      description="Multi-leg race series like Procam with their own visual treatment. We're designing this after v1."
+    >
       <div
         style={{
           marginTop: 40,
@@ -78,6 +60,6 @@ export default function EventsPage() {
           </div>
         ))}
       </div>
-    </div>
+    </ComingSoon>
   );
 }

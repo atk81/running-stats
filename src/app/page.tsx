@@ -1,10 +1,10 @@
 import { cookies } from "next/headers";
-import { getSessionCookieName } from "@/lib/appwrite/server";
 import { AuthedHome } from "@/components/auth/AuthedHome";
 import { ConnectScreen } from "@/components/connect/ConnectScreen";
+import { readSessionSecret } from "@/lib/auth/cookies";
 
 export default async function HomePage() {
   const cookieStore = await cookies();
-  const session = cookieStore.get(getSessionCookieName())?.value;
+  const session = readSessionSecret(cookieStore);
   return session ? <AuthedHome /> : <ConnectScreen />;
 }
