@@ -1,0 +1,771 @@
+{
+    "projectId": "69f5e1d0002c4fd86283",
+    "projectName": "runStats",
+    "endpoint": "https://cloud.appwrite.io/v1",
+    "databases": [
+        {
+            "$id": "runstats_db",
+            "name": "runstats",
+            "enabled": true
+        }
+    ],
+    "collections": [
+        {
+            "$id": "users",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "databaseId": "runstats_db",
+            "name": "users",
+            "enabled": true,
+            "documentSecurity": true,
+            "attributes": [
+                {
+                    "key": "userId",
+                    "type": "string",
+                    "size": 36,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "handle",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "city",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "avatarFileId",
+                    "type": "string",
+                    "size": 36,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "accentColor",
+                    "type": "string",
+                    "size": 7,
+                    "required": false,
+                    "array": false,
+                    "default": "#FF6800"
+                },
+                {
+                    "key": "stravaAthleteId",
+                    "type": "string",
+                    "size": 20,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "stravaAccessToken",
+                    "type": "string",
+                    "size": 256,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "stravaRefreshToken",
+                    "type": "string",
+                    "size": 256,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "stravaTokenExpiresAt",
+                    "type": "integer",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "autoSharePR",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": true
+                },
+                {
+                    "key": "autoShareVolume",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": true
+                },
+                {
+                    "key": "autoShareWeeklyRecap",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": true
+                },
+                {
+                    "key": "onboardingComplete",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": false
+                },
+                {
+                    "key": "lastSyncAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "idx_user_id",
+                    "type": "key",
+                    "attributes": [
+                        "userId"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_strava_athlete_id",
+                    "type": "unique",
+                    "attributes": [
+                        "stravaAthleteId"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_handle",
+                    "type": "unique",
+                    "attributes": [
+                        "handle"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "goals",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "databaseId": "runstats_db",
+            "name": "goals",
+            "enabled": true,
+            "documentSecurity": true,
+            "attributes": [
+                {
+                    "key": "userId",
+                    "type": "string",
+                    "size": 36,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "goalKey",
+                    "type": "string",
+                    "size": 32,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "type",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "distanceLabel",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "targetValue",
+                    "type": "string",
+                    "size": 32,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "targetSeconds",
+                    "type": "integer",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "currentValue",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "currentSeconds",
+                    "type": "integer",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "percentage",
+                    "type": "integer",
+                    "required": false,
+                    "array": false,
+                    "min": 0,
+                    "max": 100,
+                    "default": 0
+                },
+                {
+                    "key": "done",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": false
+                },
+                {
+                    "key": "doneAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "year",
+                    "type": "integer",
+                    "required": true,
+                    "array": false,
+                    "min": 2000,
+                    "max": 2100
+                },
+                {
+                    "key": "isBuiltin",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "idx_user_year",
+                    "type": "key",
+                    "attributes": [
+                        "userId",
+                        "year"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "DESC"
+                    ]
+                },
+                {
+                    "key": "idx_user_goal_key",
+                    "type": "unique",
+                    "attributes": [
+                        "userId",
+                        "goalKey",
+                        "year"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "ASC",
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "activities",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "databaseId": "runstats_db",
+            "name": "activities",
+            "enabled": true,
+            "documentSecurity": true,
+            "attributes": [
+                {
+                    "key": "userId",
+                    "type": "string",
+                    "size": 36,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "stravaActivityId",
+                    "type": "string",
+                    "size": 20,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "title",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "type",
+                    "type": "string",
+                    "size": 32,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "date",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "distanceMeters",
+                    "type": "double",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "distanceKm",
+                    "type": "double",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "movingTimeSec",
+                    "type": "integer",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "elapsedTimeSec",
+                    "type": "integer",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "avgSpeedMps",
+                    "type": "double",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "avgPaceSecPerKm",
+                    "type": "integer",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "maxSpeedMps",
+                    "type": "double",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "avgHeartrate",
+                    "type": "double",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "maxHeartrate",
+                    "type": "double",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "elevationGainM",
+                    "type": "double",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "calories",
+                    "type": "double",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "summaryPolyline",
+                    "type": "string",
+                    "size": 4096,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "prCount",
+                    "type": "integer",
+                    "required": false,
+                    "array": false,
+                    "default": 0
+                },
+                {
+                    "key": "achievementCount",
+                    "type": "integer",
+                    "required": false,
+                    "array": false,
+                    "default": 0
+                },
+                {
+                    "key": "bestEfforts",
+                    "type": "string",
+                    "size": 4096,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "splitsMetric",
+                    "type": "string",
+                    "size": 4096,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "processed",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "idx_strava_activity_id",
+                    "type": "unique",
+                    "attributes": [
+                        "stravaActivityId"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_user_date",
+                    "type": "key",
+                    "attributes": [
+                        "userId",
+                        "date"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "DESC"
+                    ]
+                },
+                {
+                    "key": "idx_user_processed",
+                    "type": "key",
+                    "attributes": [
+                        "userId",
+                        "processed"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "milestones",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "databaseId": "runstats_db",
+            "name": "milestones",
+            "enabled": true,
+            "documentSecurity": true,
+            "attributes": [
+                {
+                    "key": "userId",
+                    "type": "string",
+                    "size": 36,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "kind",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "activityId",
+                    "type": "string",
+                    "size": 36,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "goalId",
+                    "type": "string",
+                    "size": 36,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "pillText",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "tone",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "bigValue",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "bigSub",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "deltaValue",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "prevValue",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "subtitle",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "date",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "context",
+                    "type": "string",
+                    "size": 256,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "caption",
+                    "type": "string",
+                    "size": 512,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "storyData",
+                    "type": "string",
+                    "size": 4096,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "shared",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": false
+                },
+                {
+                    "key": "imageFileId",
+                    "type": "string",
+                    "size": 36,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "selectedTemplate",
+                    "type": "string",
+                    "size": 4,
+                    "required": false,
+                    "array": false,
+                    "default": "t1"
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "idx_user_date",
+                    "type": "key",
+                    "attributes": [
+                        "userId",
+                        "date"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "DESC"
+                    ]
+                },
+                {
+                    "key": "idx_user_kind",
+                    "type": "key",
+                    "attributes": [
+                        "userId",
+                        "kind"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_user_shared",
+                    "type": "key",
+                    "attributes": [
+                        "userId",
+                        "shared"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "personal_records",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "databaseId": "runstats_db",
+            "name": "personal_records",
+            "enabled": true,
+            "documentSecurity": true,
+            "attributes": [
+                {
+                    "key": "userId",
+                    "type": "string",
+                    "size": 36,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "distanceBucket",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "bestTimeSec",
+                    "type": "integer",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "bestTimeFormatted",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "activityId",
+                    "type": "string",
+                    "size": 36,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "achievedAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "previousBestSec",
+                    "type": "integer",
+                    "required": false,
+                    "array": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "idx_user_bucket",
+                    "type": "unique",
+                    "attributes": [
+                        "userId",
+                        "distanceBucket"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_user_achieved",
+                    "type": "key",
+                    "attributes": [
+                        "userId",
+                        "achievedAt"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "DESC"
+                    ]
+                }
+            ]
+        }
+    ],
+    "buckets": [
+        {
+            "$id": "media",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "fileSecurity": true,
+            "name": "media",
+            "enabled": true,
+            "maximumFileSize": 10485760,
+            "allowedFileExtensions": [
+                "jpg",
+                "jpeg",
+                "png",
+                "webp"
+            ],
+            "compression": "none",
+            "encryption": true,
+            "antivirus": true
+        }
+    ]
+}
