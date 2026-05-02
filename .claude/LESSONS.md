@@ -42,6 +42,10 @@
 
 - **Next.js 16 has breaking API changes vs training-data-era Next.js.** The scaffold's `AGENTS.md` flags this explicitly. **How to apply:** before writing or porting any Next.js component, page, or route, check `node_modules/next/dist/docs/` for the relevant guide. Don't trust prior knowledge of `app/` conventions blindly.
 
+## React 19 / ESLint
+
+- **`react-hooks/set-state-in-effect` lint rule blocks synchronous `setState()` inside `useEffect` body.** Even an early-out like `if (cond) { setVal(0); return; }` fails. **Why:** PR #5 hit this when adding a `to === 0` early-out to `CountUp`. **How to apply:** if you need to seed state from an effect, either (a) defer via `requestAnimationFrame(() => setVal(x))` (the rAF callback is allowed), (b) move the `setVal` into the loop/callback path the effect already schedules, or (c) skip the optimization. Synchronous `setVal` inside the effect body itself is a hard-fail under `eslint-config-next` v16.
+
 ---
 
 ## Reverted / outdated entries
