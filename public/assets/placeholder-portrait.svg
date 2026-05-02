@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500">
+  <defs>
+    <linearGradient id="duoBG" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#FFA900"></stop>
+      <stop offset="1" stop-color="#FF6800"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="500" fill="url(#duoBG)"></rect>
+  <g fill="#0A0D10">
+    <circle cx="200" cy="165" r="62"></circle>
+    <path d="M80 500 C 80 380, 130 320, 200 320 C 270 320, 320 380, 320 500 Z"></path>
+  </g>
+</svg>
