@@ -1,0 +1,20 @@
+{
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true,
+    "document-skills@anthropic-agent-skills": true,
+    "example-skills@anthropic-agent-skills": true,
+    "code-simplifier@claude-plugins-official": true
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"UserPromptSubmit\",\"additionalContext\":\"<system-reminder>CAVEMAN MODE ACTIVE for this project. Read and follow .claude/skills/caveman/SKILL.md exactly for this and every subsequent response. Drop articles (a/an/the), filler (just/really/basically), pleasantries (sure/of course). Fragments OK. Keep technical terms, code blocks, error messages exact. Use arrows for causality (X -> Y). Stay caveman until user says stop caveman or normal mode. Drop caveman temporarily for security warnings and destructive op confirmations.</system-reminder>\"}}'"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -26,3 +26,9 @@ yarn-error.log*
 # Vercel/Build
 *.tsbuildinfo
 next-env.d.ts
+
+# Spartan AI config (contains API keys)
+.spartan/ai.env
+
+# Claude Code per-user settings
+.claude/settings.local.json
