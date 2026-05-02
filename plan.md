@@ -72,7 +72,7 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 - [x] Set up `(app)/layout.tsx` with auth gate + Chrome nav
 
 ### Phase 1 Verification
-- [ ] Can log in via Strava, see Chrome nav, session persists on refresh
+- [x] Can log in via Strava, see Chrome nav, session persists on refresh
 
 ---
 
