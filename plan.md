@@ -56,15 +56,15 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 - [x] Port `CountUp` component to TSX
 
 ### Auth + Appwrite Client
-- [ ] Create `lib/appwrite/client.ts` (browser Appwrite client)
-- [ ] Create `lib/appwrite/server.ts` (server-side Appwrite client with admin key)
-- [ ] Create `lib/appwrite/collections.ts` (collection IDs, attribute constants)
-- [ ] Create `lib/strava/oauth.ts` (OAuth URL builder, token exchange)
-- [ ] Implement `GET /api/auth/strava` (redirect to Strava OAuth)
-- [ ] Implement `GET /api/auth/strava/callback` (exchange code, create user, set session)
-- [ ] Implement `POST /api/auth/logout` (destroy session)
-- [ ] Implement `GET /api/auth/me` (current user profile)
-- [ ] Create `UserProvider` context + `useUser` hook
+- [x] Create `lib/appwrite/client.ts` (browser Appwrite client)
+- [x] Create `lib/appwrite/server.ts` (server-side Appwrite client with admin key)
+- [x] Create `lib/appwrite/collections.ts` (collection IDs, attribute constants)
+- [x] Create `lib/strava/oauth.ts` (OAuth URL builder, token exchange)
+- [x] Implement `GET /api/auth/strava` (redirect to Strava OAuth)
+- [x] Implement `GET /api/auth/strava/callback` (exchange code, create user, set session)
+- [x] Implement `POST /api/auth/logout` (destroy session)
+- [x] Implement `GET /api/auth/me` (current user profile)
+- [x] Create `UserProvider` context + `useUser` hook
 
 ### Core Layout
 - [ ] Port Chrome nav shell (`chrome.jsx` → `components/chrome/Chrome.tsx`)
@@ -90,7 +90,7 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 ### Strava Activity Sync
 - [ ] Create `lib/strava/api.ts` (Strava API client with fetch wrapper)
 - [ ] Create `lib/strava/tokenRefresh.ts` (check expiry, refresh if needed, update user doc)
-- [ ] Create `lib/utils/encryption.ts` (AES-256 encrypt/decrypt for Strava tokens)
+- [x] Create `lib/utils/encryption.ts` (AES-256 encrypt/decrypt for Strava tokens) <!-- pulled forward in Phase 1 Auth PR; required by callback -->
 - [ ] Implement `POST /api/strava/sync`:
   - [ ] Fetch last 90 days of Run/TrailRun/VirtualRun activities from Strava
   - [ ] Parse and store in `activities` collection (with bestEfforts, splitsMetric as JSON)
