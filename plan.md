@@ -67,9 +67,9 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 - [x] Create `UserProvider` context + `useUser` hook
 
 ### Core Layout
-- [ ] Port Chrome nav shell (`chrome.jsx` → `components/chrome/Chrome.tsx`)
-- [ ] Port landing/connect page (`connect.jsx` → `app/page.tsx`) with real Strava OAuth button
-- [ ] Set up `(app)/layout.tsx` with auth gate + Chrome nav
+- [x] Port Chrome nav shell (`chrome.jsx` → `components/chrome/Chrome.tsx`)
+- [x] Port landing/connect page (`connect.jsx` → `app/page.tsx`) with real Strava OAuth button
+- [x] Set up `(app)/layout.tsx` with auth gate + Chrome nav
 
 ### Phase 1 Verification
 - [ ] Can log in via Strava, see Chrome nav, session persists on refresh

@@ -55,6 +55,11 @@
 ## React 19 / ESLint
 
 - **`react-hooks/set-state-in-effect` lint rule blocks synchronous `setState()` inside `useEffect` body.** Even an early-out like `if (cond) { setVal(0); return; }` fails. **Why:** PR #5 hit this when adding a `to === 0` early-out to `CountUp`. **How to apply:** if you need to seed state from an effect, either (a) defer via `requestAnimationFrame(() => setVal(x))` (the rAF callback is allowed), (b) move the `setVal` into the loop/callback path the effect already schedules, or (c) skip the optimization. Synchronous `setVal` inside the effect body itself is a hard-fail under `eslint-config-next` v16.
+- **`react/no-unescaped-entities` only fires on JSX TEXT nodes, not string-prop values.** `<p>You're connected</p>` -> lint error, fix with `&apos;`. `<Foo description="You're connected" />` -> no error, the apostrophe is a plain JS string. **Why:** PR #8 first wrote `&apos;` inside a string-prop value, which renders the literal `&apos;` in the DOM. **How to apply:** use HTML entities only when the apostrophe is between JSX tags. Inside string literals (props, constants), use bare `'`.
+
+## Next.js 16 — server vs client boundaries
+
+- **Dropping `onClick` for `<a href>` lets a whole screen become a server component.** Server components ship zero JS for that subtree -> faster TTI on hot pages (e.g. landing). **Why:** PR #8 ConnectScreen originally had `onClick={() => window.location.href = "/api/auth/strava"}`, forcing `'use client'`. Replacing with `<a href="/api/auth/strava" style={...}>` made it server-renderable, dropping the entire connect-page bundle for unauthed visitors. **How to apply:** before adding `onClick` to a button that just navigates, ask "is this just a navigation?" If yes, use `<a>` (or `<Link>` for internal routes) and keep the file server-rendered. Reserve `'use client'` for components that genuinely need React state, effects, or DOM event handlers beyond plain navigation.
 
 ---
 
