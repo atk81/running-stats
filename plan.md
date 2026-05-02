@@ -46,14 +46,14 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 - [x] Set up Google Fonts (Bebas Neue, Inter, JetBrains Mono, Anton, Caveat, Permanent Marker)
 
 ### Primitive Components
-- [ ] Port `Button` component to TSX
-- [ ] Port `Pill` component to TSX
-- [ ] Port `Label` component to TSX
-- [ ] Port `ProgressBar` component to TSX
-- [ ] Port `ProgressRing` component to TSX
-- [ ] Port `Input` component to TSX
-- [ ] Port `Icon` component to TSX (all 30+ icon paths)
-- [ ] Port `CountUp` component to TSX
+- [x] Port `Button` component to TSX
+- [x] Port `Pill` component to TSX
+- [x] Port `Label` component to TSX
+- [x] Port `ProgressBar` component to TSX
+- [x] Port `ProgressRing` component to TSX
+- [x] Port `Input` component to TSX
+- [x] Port `Icon` component to TSX (all 30+ icon paths)
+- [x] Port `CountUp` component to TSX
 
 ### Auth + Appwrite Client
 - [ ] Create `lib/appwrite/client.ts` (browser Appwrite client)
