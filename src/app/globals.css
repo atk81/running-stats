@@ -1,15 +1,7 @@
 @import "tailwindcss";
 
-/* ==========================================================================
-   runStats Design System — ported from runstats/colors_and_type.css
-   --------------------------------------------------------------------------
-   Source of truth: prototype's colors_and_type.css (PR #1 → public/runstats).
-   Fonts loaded via next/font/google in app/layout.tsx and exposed as
-   --ff-* CSS variables on <html>.
-   ========================================================================== */
-
 :root {
-  /* ---- BRAND PALETTE ---------------------------------------------------- */
+  /* Brand palette */
   --ink:            #0A0D10;
   --ink-2:          #14181C;
   --ink-3:          #22272D;
@@ -17,7 +9,7 @@
   --bone-2:         #E6E8EC;
   --bone-3:         #CDD1D8;
 
-  /* Signal accents — "Electric Fusion" */
+  /* Accents */
   --ignite:         #FF6800;
   --ignite-deep:    #C24700;
   --ignite-soft:    #FFE3CC;
@@ -31,7 +23,7 @@
   --cyan-deep:      #00B8C2;
   --cyan-soft:      #CCFAFF;
 
-  /* Sport spectrum */
+  /* Sport zones */
   --zone-1:         #00F0FF;
   --zone-2:         #00FF81;
   --zone-3:         #FFA900;
@@ -44,7 +36,7 @@
   --danger:         #FF6800;
   --info:           #00F0FF;
 
-  /* ---- THEME: LIGHT (bone) --------------------------------------------- */
+  /* Light theme */
   --bg:             var(--bone);
   --bg-raised:      #FBFBFD;
   --bg-sunken:      var(--bone-2);
@@ -60,9 +52,9 @@
   --accent:         var(--ignite);
   --accent-fg:      #FFFFFF;
 
-  /* ---- TYPE — family stacks consume next/font CSS variables ------------ */
+  /* Type families */
   --font-display:   var(--ff-bebas), 'Archivo Narrow', 'Impact', sans-serif;
-  --font-heading:   var(--ff-archivo), var(--ff-space), system-ui, sans-serif;
+  --font-heading:   var(--ff-archivo), 'Space Grotesk', system-ui, sans-serif;
   --font-body:      var(--ff-inter), system-ui, -apple-system, sans-serif;
   --font-mono:      var(--ff-jetmono), 'SF Mono', Consolas, monospace;
   --font-anton:     var(--ff-anton), 'Impact', sans-serif;
@@ -95,7 +87,7 @@
   --ls-caps:        0.08em;
   --ls-micro-caps:  0.14em;
 
-  /* ---- SPACING ---------------------------------------------------------- */
+  /* Spacing */
   --sp-0:   0;
   --sp-1:   4px;
   --sp-2:   8px;
@@ -110,7 +102,7 @@
   --sp-11:  96px;
   --sp-12:  128px;
 
-  /* ---- RADII ----------------------------------------------------------- */
+  /* Radii */
   --r-0:    0;
   --r-1:    2px;
   --r-2:    6px;
@@ -119,7 +111,7 @@
   --r-5:    24px;
   --r-pill: 999px;
 
-  /* ---- SHADOWS --------------------------------------------------------- */
+  /* Shadows */
   --sh-1: 0 1px 0 rgba(10,13,16,0.04), 0 1px 2px rgba(10,13,16,0.06);
   --sh-2: 0 2px 4px rgba(10,13,16,0.06), 0 4px 12px rgba(10,13,16,0.08);
   --sh-3: 0 8px 24px rgba(10,13,16,0.10), 0 2px 6px rgba(10,13,16,0.06);
@@ -127,7 +119,7 @@
   --sh-ignite: 0 4px 16px rgba(255,104,0,0.32);
   --sh-inset: inset 0 1px 0 rgba(255,255,255,0.06);
 
-  /* ---- MOTION ---------------------------------------------------------- */
+  /* Motion */
   --ease-snap:     cubic-bezier(.2,.8,.2,1);
   --ease-out:      cubic-bezier(.16,1,.3,1);
   --ease-in:       cubic-bezier(.4,0,1,1);
@@ -140,7 +132,7 @@
   --dur-6: 1400ms;
 }
 
-/* ---- THEME: DARK (ink) ------------------------------------------------ */
+/* Dark theme */
 [data-theme="dark"], .theme-ink {
   --bg:             var(--ink);
   --bg-raised:      var(--ink-2);
@@ -158,14 +150,8 @@
   --accent-fg:      #FFFFFF;
 }
 
-/* ==========================================================================
-   Tailwind v4 @theme — exposes tokens as utility classes
-   - color-* → bg-{name}, text-{name}, border-{name}
-   - font-*  → font-{name}
-   - radius-* → rounded-{name}
-   ========================================================================== */
+/* Tailwind v4 utility tokens */
 @theme inline {
-  /* Brand palette */
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
@@ -173,7 +159,6 @@
   --color-bone-2: var(--bone-2);
   --color-bone-3: var(--bone-3);
 
-  /* Accents */
   --color-ignite: var(--ignite);
   --color-ignite-deep: var(--ignite-deep);
   --color-ignite-soft: var(--ignite-soft);
@@ -187,20 +172,17 @@
   --color-cyan-deep: var(--cyan-deep);
   --color-cyan-soft: var(--cyan-soft);
 
-  /* Sport zones */
   --color-zone-1: var(--zone-1);
   --color-zone-2: var(--zone-2);
   --color-zone-3: var(--zone-3);
   --color-zone-4: var(--zone-4);
   --color-zone-5: var(--zone-5);
 
-  /* Semantic */
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-info: var(--info);
 
-  /* Theme-aware */
   --color-bg: var(--bg);
   --color-bg-raised: var(--bg-raised);
   --color-bg-sunken: var(--bg-sunken);
@@ -215,7 +197,6 @@
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
 
-  /* Fonts */
   --font-display: var(--font-display);
   --font-heading: var(--font-heading);
   --font-body: var(--font-body);
@@ -224,7 +205,6 @@
   --font-script: var(--font-script);
   --font-marker: var(--font-marker);
 
-  /* Radii */
   --radius-1: var(--r-1);
   --radius-2: var(--r-2);
   --radius-3: var(--r-3);
@@ -233,9 +213,7 @@
   --radius-pill: var(--r-pill);
 }
 
-/* ==========================================================================
-   Semantic type classes — match prototype usage in JSX
-   ========================================================================== */
+/* Type classes */
 .hero-numeral,
 .t-hero {
   font-family: var(--font-display);
@@ -303,9 +281,7 @@ code, pre, .t-code { font-family: var(--font-mono); font-size: 0.92em; }
 
 .nums { font-variant-numeric: tabular-nums; }
 
-/* ==========================================================================
-   Base
-   ========================================================================== */
+/* Base */
 * { box-sizing: border-box; }
 html, body {
   margin: 0;
@@ -318,9 +294,7 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
-/* ==========================================================================
-   Keyframes — ported from runstats/index.html (21 keyframes)
-   ========================================================================== */
+/* Keyframes */
 @keyframes rs-fade-in           { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes rs-fade-in-no-move   { from { opacity: 0; } to { opacity: 1; } }
 @keyframes rs-scale-in          { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }

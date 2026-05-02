@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import {
   Bebas_Neue,
   Archivo_Narrow,
-  Space_Grotesk,
   Inter,
   JetBrains_Mono,
   Anton,
@@ -20,25 +19,19 @@ const bebas = Bebas_Neue({
 const archivo = Archivo_Narrow({
   variable: "--ff-archivo",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const space = Space_Grotesk({
-  variable: "--ff-space",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "700"],
 });
 
 const inter = Inter({
   variable: "--ff-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600"],
 });
 
 const jetMono = JetBrains_Mono({
   variable: "--ff-jetmono",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "500"],
 });
 
 const anton = Anton({
@@ -50,7 +43,7 @@ const anton = Anton({
 const caveat = Caveat({
   variable: "--ff-caveat",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "700"],
 });
 
 const marker = Permanent_Marker({
@@ -59,22 +52,14 @@ const marker = Permanent_Marker({
   weight: ["400"],
 });
 
+const fonts = [bebas, archivo, inter, jetMono, anton, caveat, marker];
+const fontVars = fonts.map((f) => f.variable).join(" ");
+
 export const metadata: Metadata = {
   title: "runStats — Make every run unforgettable",
   description:
     "Generate share-ready milestone images from your Strava runs. PRs, streaks, goals, weekly recaps.",
 };
-
-const fontVars = [
-  bebas.variable,
-  archivo.variable,
-  space.variable,
-  inter.variable,
-  jetMono.variable,
-  anton.variable,
-  caveat.variable,
-  marker.variable,
-].join(" ");
 
 export default function RootLayout({
   children,
