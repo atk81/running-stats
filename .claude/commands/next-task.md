@@ -12,7 +12,13 @@ You are the **runStats pipeline driver**. End-to-end execution from `plan.md` to
 
 ---
 
-## Stage 0 — Sanity check
+## Stage 0 — Sanity check + load lessons
+
+**MUST happen before anything else:**
+
+1. **Read `.claude/LESSONS.md` end to end.** This file captures non-obvious traps prior runs hit (Appwrite quirks, gh CLI bugs, free-tier caps, etc.). Apply every relevant entry. Skipping this re-burns time on solved problems.
+
+2. Sanity-check git + auth:
 
 ```bash
 git status
@@ -22,6 +28,7 @@ gh auth status
 ```
 
 **Stop conditions:**
+- `.claude/LESSONS.md` missing → STOP. Tell user; the file is required.
 - Uncommitted changes on `main` → ask user to commit/stash first.
 - Not on `main` → ask: continue current branch or switch to main?
 - `gh` not authed → ask user to run `gh auth login` (use `! gh auth login` syntax).
@@ -96,6 +103,31 @@ docs(plan): mark <section name> tasks as done
 
 ---
 
+## Stage 4.5 — Capture lessons (gate before Stage 5)
+
+Ask explicitly: did this section surface any **non-obvious** failure + recovery worth saving for future runs? Examples that qualify:
+
+- A tool returned a misleading error message and the real cause was elsewhere.
+- A tier limit / row size / API quirk we didn't expect.
+- A CLI flag that doesn't behave as documented.
+- A schema/format mismatch between two layers (e.g. CLI manifest vs server validator).
+
+Examples that do NOT qualify (skip):
+
+- Plain bug fixes already captured in commit messages.
+- Things obvious from reading the code or vendor docs.
+- One-off typos.
+
+If yes → append a topical entry to `.claude/LESSONS.md` following the file's "How to add an entry" rules (lead with the rule, then **Why** + **How to apply** + PR ref). Commit:
+
+```
+docs(lessons): capture <topic> learning from <section>
+```
+
+If no → skip. Do NOT pad the file.
+
+---
+
 ## Stage 5 — PR
 
 Run `/spartan:pr-ready`. It handles rebase, lint, type-check, test, security scan, PR description, and `gh pr create`.
@@ -159,6 +191,9 @@ Output to user (and save to `.handoff/last-task.md`):
 ## Skills + agents used
 - <list>
 
+## Lessons added
+- <list of new entries appended to .claude/LESSONS.md, or "none — section ran clean">
+
 ## Next up
 - <next unchecked section from plan.md, or "all sections complete">
 
@@ -170,10 +205,12 @@ Output to user (and save to `.handoff/last-task.md`):
 
 ## Hard rules
 
+- **Never** start work without first reading `.claude/LESSONS.md` (Stage 0). Skipping it re-burns time on already-solved traps.
 - **Never** modify `plan.md` outside Stage 4.
 - **Never** commit secrets (`.env`, API keys, Appwrite admin keys). Scan diffs at Stage 5.
 - **Never** skip the section's "Phase Verification" sub-bullet — surface it to the user as a manual smoke-test step in the summary.
 - **Never** run two sections' work in the same branch. One section = one PR.
+- **Never** silently delete or rewrite a `LESSONS.md` entry. If proven wrong, append a correction below the original — keep the trail.
 - If you hit any "wait, this is unclear" — STOP, name what's unclear, present 2-3 options, wait. (Per `CLAUDE.md` → Intellectual Honesty.)
 
 ## When to stop the run mid-flight
