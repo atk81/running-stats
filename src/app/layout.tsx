@@ -8,6 +8,7 @@ import {
   Caveat,
   Permanent_Marker,
 } from "next/font/google";
+import { Providers } from "@/lib/contexts/Providers";
 import "./globals.css";
 
 const bebas = Bebas_Neue({
@@ -68,7 +69,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${fontVars} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

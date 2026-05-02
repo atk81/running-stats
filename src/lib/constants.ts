@@ -1,0 +1,1 @@
+export const DEFAULT_ACCENT_COLOR = "#FF6800";
