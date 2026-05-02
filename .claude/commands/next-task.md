@@ -103,7 +103,30 @@ docs(plan): mark <section name> tasks as done
 
 ---
 
-## Stage 4.5 — Capture lessons (gate before Stage 5)
+## Stage 4.5 — Simplify (gate before lessons + PR)
+
+Run `/simplify` against the diff for this section. The skill spawns three parallel reviewers (reuse / quality / efficiency) and reports findings.
+
+What this stage MUST do:
+
+1. Invoke `/simplify` (or its Skill tool equivalent). Pass the changed-files context — the skill reads `git diff` itself.
+2. Apply every **substantive** finding directly. Skip false positives without arguing.
+3. After fixes, **re-run** `npm run build` + `npm run lint` (or stack equivalent) to confirm green.
+4. Commit any changes as a single refactor commit:
+
+```
+refactor(<scope>): simplify per /simplify review
+```
+
+5. If `/simplify` returns nothing actionable → no commit needed, move on.
+
+Why this gate exists: PRs that ship without this gate accrete dead code, redundant state, over-broad imports, and comment narration. Catching it before the PR opens beats catching it in review or post-merge.
+
+Skip rule: if the section is itself a wiring change to `/simplify` or `/next-task` machinery (recursion risk), note the exemption in the PR body and proceed.
+
+---
+
+## Stage 4.6 — Capture lessons (gate before Stage 5)
 
 Ask explicitly: did this section surface any **non-obvious** failure + recovery worth saving for future runs? Examples that qualify:
 
@@ -191,6 +214,9 @@ Output to user (and save to `.handoff/last-task.md`):
 ## Skills + agents used
 - <list>
 
+## Simplify findings applied
+- <list of fixes applied from /simplify, or "none — diff was clean", or "exempt (machinery PR)">
+
 ## Lessons added
 - <list of new entries appended to .claude/LESSONS.md, or "none — section ran clean">
 
@@ -206,6 +232,7 @@ Output to user (and save to `.handoff/last-task.md`):
 ## Hard rules
 
 - **Never** start work without first reading `.claude/LESSONS.md` (Stage 0). Skipping it re-burns time on already-solved traps.
+- **Never** open a PR without first running `/simplify` (Stage 4.5). Exception: machinery PRs that wire `/simplify` itself — note the exemption in PR body.
 - **Never** modify `plan.md` outside Stage 4.
 - **Never** commit secrets (`.env`, API keys, Appwrite admin keys). Scan diffs at Stage 5.
 - **Never** skip the section's "Phase Verification" sub-bullet — surface it to the user as a manual smoke-test step in the summary.
