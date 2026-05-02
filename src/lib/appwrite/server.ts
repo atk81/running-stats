@@ -41,12 +41,8 @@ export function getSessionClient(sessionSecret: string): SessionClient {
   };
 }
 
-export function getProjectId(): string {
-  return requireEnv("NEXT_PUBLIC_APPWRITE_PROJECT_ID");
-}
-
 export function getSessionCookieName(): string {
   if (cachedSessionCookieName) return cachedSessionCookieName;
-  cachedSessionCookieName = `a_session_${getProjectId()}`;
+  cachedSessionCookieName = `a_session_${requireEnv("NEXT_PUBLIC_APPWRITE_PROJECT_ID")}`;
   return cachedSessionCookieName;
 }
