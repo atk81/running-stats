@@ -1,3 +1,5 @@
+import "server-only";
+
 const VERSION_PREFIX = "v1:";
 const KEY_BYTE_LENGTH = 32;
 const IV_BYTE_LENGTH = 12;

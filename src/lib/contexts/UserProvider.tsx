@@ -2,7 +2,7 @@
 
 import { createContext, useMemo, type ReactNode } from "react";
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import type { MeResponse } from "@/app/api/auth/me/route";
+import type { MeResponse } from "@/lib/auth/types";
 
 type MeQuery = UseQueryResult<MeResponse | null, Error>;
 

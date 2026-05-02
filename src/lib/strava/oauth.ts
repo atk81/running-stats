@@ -1,15 +1,11 @@
 import "server-only";
+import { requireEnv } from "@/lib/utils/env";
 import type { StravaScope, StravaTokenResponse } from "./types";
 
 const STRAVA_AUTHORIZE_URL = "https://www.strava.com/oauth/authorize";
 const STRAVA_TOKEN_URL = "https://www.strava.com/oauth/token";
+const TOKEN_EXCHANGE_TIMEOUT_MS = 10_000;
 const DEFAULT_SCOPES: StravaScope[] = ["read", "activity:read_all", "profile:read_all"];
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} env var is required`);
-  return value;
-}
 
 export interface BuildAuthorizeUrlInput {
   state: string;
@@ -41,6 +37,7 @@ export async function exchangeCode(code: string): Promise<StravaTokenResponse> {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
     cache: "no-store",
+    signal: AbortSignal.timeout(TOKEN_EXCHANGE_TIMEOUT_MS),
   });
   if (!res.ok) {
     const detail = await res.text();

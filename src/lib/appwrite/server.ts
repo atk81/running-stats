@@ -1,5 +1,6 @@
 import "server-only";
 import { Account, Client, Databases, Users } from "node-appwrite";
+import { requireEnv } from "@/lib/utils/env";
 
 interface AdminClient {
   client: Client;
@@ -10,16 +11,10 @@ interface AdminClient {
 interface SessionClient {
   client: Client;
   account: Account;
-  databases: Databases;
 }
 
 let cachedAdmin: AdminClient | null = null;
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} env var is required`);
-  return value;
-}
+let cachedSessionCookieName: string | null = null;
 
 function buildClient(): Client {
   return new Client()
@@ -43,7 +38,6 @@ export function getSessionClient(sessionSecret: string): SessionClient {
   return {
     client,
     account: new Account(client),
-    databases: new Databases(client),
   };
 }
 
@@ -52,5 +46,7 @@ export function getProjectId(): string {
 }
 
 export function getSessionCookieName(): string {
-  return `a_session_${getProjectId()}`;
+  if (cachedSessionCookieName) return cachedSessionCookieName;
+  cachedSessionCookieName = `a_session_${getProjectId()}`;
+  return cachedSessionCookieName;
 }

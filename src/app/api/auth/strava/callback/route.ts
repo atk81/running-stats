@@ -1,24 +1,23 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { AppwriteException } from "node-appwrite";
 import { ATTRS, COLLECTIONS, DATABASE_ID } from "@/lib/appwrite/collections";
-import { getAdminClient, getSessionCookieName } from "@/lib/appwrite/server";
+import { getAdminClient } from "@/lib/appwrite/server";
+import {
+  clearOAuthState,
+  readOAuthState,
+  setSessionCookie,
+} from "@/lib/auth/cookies";
+import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 import { exchangeCode } from "@/lib/strava/oauth";
 import { encrypt } from "@/lib/utils/encryption";
 
 export const runtime = "nodejs";
 
-const STATE_COOKIE = "oauth_state";
 const APPWRITE_CONFLICT = 409;
-const DEFAULT_ACCENT = "#FF6800";
 
-interface AppwriteError {
-  code?: number;
-  type?: string;
-  message?: string;
-}
-
-function isConflict(err: unknown): boolean {
-  return (err as AppwriteError)?.code === APPWRITE_CONFLICT;
+function isAppwriteConflict(err: unknown): boolean {
+  return err instanceof AppwriteException && err.code === APPWRITE_CONFLICT;
 }
 
 function deriveUserId(athleteId: string): string {
@@ -42,14 +41,11 @@ export async function GET(req: NextRequest) {
     );
   }
   if (!code || !state) {
-    return NextResponse.json(
-      { error: "missing_code_or_state" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "missing_code_or_state" }, { status: 400 });
   }
 
   const cookieStore = await cookies();
-  const stateCookie = cookieStore.get(STATE_COOKIE)?.value;
+  const stateCookie = readOAuthState(cookieStore);
   if (!stateCookie || stateCookie !== state) {
     return NextResponse.json({ error: "invalid_state" }, { status: 400 });
   }
@@ -76,11 +72,9 @@ export async function GET(req: NextRequest) {
   try {
     await users.create(userId, email, undefined, undefined, name);
   } catch (err) {
-    if (!isConflict(err)) {
-      return NextResponse.json(
-        { error: "user_create_failed", detail: String(err) },
-        { status: 500 },
-      );
+    if (!isAppwriteConflict(err)) {
+      console.error("callback: users.create failed", err);
+      return NextResponse.json({ error: "user_create_failed" }, { status: 500 });
     }
   }
 
@@ -99,7 +93,7 @@ export async function GET(req: NextRequest) {
       [ATTRS.users.stravaAccessToken]: encAccess,
       [ATTRS.users.stravaRefreshToken]: encRefresh,
       [ATTRS.users.stravaTokenExpiresAt]: token.expires_at,
-      [ATTRS.users.accentColor]: DEFAULT_ACCENT,
+      [ATTRS.users.accentColor]: DEFAULT_ACCENT_COLOR,
       [ATTRS.users.autoSharePR]: true,
       [ATTRS.users.autoShareVolume]: true,
       [ATTRS.users.autoShareWeeklyRecap]: true,
@@ -107,35 +101,19 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     console.error("callback: upsert users doc failed", err);
-    return NextResponse.json(
-      { error: "user_doc_upsert_failed", detail: String(err) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "user_doc_upsert_failed" }, { status: 500 });
   }
 
   let session;
   try {
     session = await users.createSession(userId);
   } catch (err) {
-    return NextResponse.json(
-      { error: "session_create_failed", detail: String(err) },
-      { status: 500 },
-    );
+    console.error("callback: users.createSession failed", err);
+    return NextResponse.json({ error: "session_create_failed" }, { status: 500 });
   }
 
-  const maxAge = Math.max(
-    0,
-    Math.floor((Date.parse(session.expire) - Date.now()) / 1000),
-  );
-
-  cookieStore.set(getSessionCookieName(), session.secret, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge,
-  });
-  cookieStore.delete(STATE_COOKIE);
+  setSessionCookie(cookieStore, session.secret, session.expire);
+  clearOAuthState(cookieStore);
 
   return NextResponse.redirect(new URL("/", req.url));
 }

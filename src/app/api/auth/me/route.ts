@@ -1,29 +1,16 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ATTRS, COLLECTIONS, DATABASE_ID } from "@/lib/appwrite/collections";
-import {
-  getAdminClient,
-  getSessionClient,
-  getSessionCookieName,
-} from "@/lib/appwrite/server";
+import { getAdminClient, getSessionClient } from "@/lib/appwrite/server";
+import { clearSessionCookie, readSessionSecret } from "@/lib/auth/cookies";
+import type { MeResponse } from "@/lib/auth/types";
+import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
-export interface MeResponse {
-  userId: string;
-  name: string;
-  handle: string;
-  city: string;
-  avatarFileId: string;
-  accentColor: string;
-  onboardingComplete: boolean;
-  lastSyncAt: string | null;
-}
-
 export async function GET() {
-  const cookieName = getSessionCookieName();
   const cookieStore = await cookies();
-  const sessionSecret = cookieStore.get(cookieName)?.value;
+  const sessionSecret = readSessionSecret(cookieStore);
   if (!sessionSecret) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
@@ -33,7 +20,7 @@ export async function GET() {
     const me = await account.get();
     userId = me.$id;
   } catch {
-    cookieStore.delete(cookieName);
+    clearSessionCookie(cookieStore);
     return NextResponse.json({ error: "session_invalid" }, { status: 401 });
   }
   try {
@@ -45,7 +32,7 @@ export async function GET() {
       handle: String(doc[ATTRS.users.handle] ?? ""),
       city: String(doc[ATTRS.users.city] ?? ""),
       avatarFileId: String(doc[ATTRS.users.avatarFileId] ?? ""),
-      accentColor: String(doc[ATTRS.users.accentColor] ?? "#FF6800"),
+      accentColor: String(doc[ATTRS.users.accentColor] ?? DEFAULT_ACCENT_COLOR),
       onboardingComplete: Boolean(doc[ATTRS.users.onboardingComplete]),
       lastSyncAt: doc[ATTRS.users.lastSyncAt]
         ? String(doc[ATTRS.users.lastSyncAt])

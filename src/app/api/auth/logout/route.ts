@@ -1,13 +1,13 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getSessionClient, getSessionCookieName } from "@/lib/appwrite/server";
+import { getSessionClient } from "@/lib/appwrite/server";
+import { clearSessionCookie, readSessionSecret } from "@/lib/auth/cookies";
 
 export const runtime = "nodejs";
 
 export async function POST() {
-  const cookieName = getSessionCookieName();
   const cookieStore = await cookies();
-  const sessionSecret = cookieStore.get(cookieName)?.value;
+  const sessionSecret = readSessionSecret(cookieStore);
   if (sessionSecret) {
     try {
       const { account } = getSessionClient(sessionSecret);
@@ -16,6 +16,6 @@ export async function POST() {
       console.warn("logout: failed to delete Appwrite session", err);
     }
   }
-  cookieStore.delete(cookieName);
+  clearSessionCookie(cookieStore);
   return new NextResponse(null, { status: 204 });
 }

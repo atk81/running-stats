@@ -1,10 +1,5 @@
 import { Account, Client, Databases, Storage } from "appwrite";
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} env var is required`);
-  return value;
-}
+import { requireEnv } from "@/lib/utils/env";
 
 export const browserClient = new Client()
   .setEndpoint(requireEnv("NEXT_PUBLIC_APPWRITE_ENDPOINT"))
