@@ -24,8 +24,8 @@ export async function GET() {
     return NextResponse.json({ error: "session_invalid" }, { status: 401 });
   }
   try {
-    const { databases } = getAdminClient();
-    const doc = await databases.getDocument(DATABASE_ID, COLLECTIONS.users, userId);
+    const { tablesDB } = getAdminClient();
+    const doc = await tablesDB.getRow(DATABASE_ID, COLLECTIONS.users, userId);
     const profile: MeResponse = {
       userId,
       name: String(doc[ATTRS.users.name] ?? ""),

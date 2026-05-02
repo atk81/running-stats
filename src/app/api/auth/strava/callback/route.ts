@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
   const handle = deriveHandle(token.athlete.username, athleteId);
   const city = token.athlete.city ?? "";
 
-  const { users, databases } = getAdminClient();
+  const { users, tablesDB } = getAdminClient();
 
   try {
     await users.create(userId, email, undefined, undefined, name);
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
   ]);
 
   try {
-    await databases.upsertDocument(DATABASE_ID, COLLECTIONS.users, userId, {
+    await tablesDB.upsertRow(DATABASE_ID, COLLECTIONS.users, userId, {
       [ATTRS.users.userId]: userId,
       [ATTRS.users.name]: name,
       [ATTRS.users.handle]: handle,
