@@ -54,3 +54,6 @@ next-env.d.ts
 
 # Claude Code per-user settings
 .claude/settings.local.json
+
+# Session handoff state (per-machine, not committed)
+.handoff/
