@@ -38,7 +38,7 @@ export function Input({
   };
 
   return (
-    <div>
+    <label style={{ display: "block" }}>
       {label && <Label style={{ marginBottom: 6 }}>{label}</Label>}
       <div style={{ position: "relative" }}>
         <input
@@ -69,6 +69,6 @@ export function Input({
           </span>
         )}
       </div>
-    </div>
+    </label>
   );
 }

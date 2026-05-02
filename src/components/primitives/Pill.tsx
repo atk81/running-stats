@@ -19,7 +19,7 @@ export interface PillProps extends HTMLAttributes<HTMLSpanElement> {
 const toneStyles: Record<PillTone, CSSProperties> = {
   ink: { background: "var(--ink)", color: "var(--bone)" },
   ignite: { background: "rgba(255,104,0,0.14)", color: "var(--ignite)" },
-  igniteSolid: { background: "var(--ignite)", color: "#fff" },
+  igniteSolid: { background: "var(--ignite)", color: "var(--accent-fg)" },
   pulse: { background: "var(--pulse)", color: "var(--ink)" },
   pulseSoft: { background: "rgba(0,255,129,0.14)", color: "var(--pulse-deep)" },
   amber: { background: "rgba(255,169,0,0.14)", color: "var(--amber-deep)" },

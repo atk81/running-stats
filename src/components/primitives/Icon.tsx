@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, SVGAttributes } from "react";
 
 export type IconName =
   | "activity"
@@ -34,7 +34,7 @@ export type IconName =
   | "eye"
   | "wand";
 
-export interface IconProps {
+export interface IconProps extends Omit<SVGAttributes<SVGSVGElement>, "name"> {
   name: IconName;
   size?: number;
   color?: string;
@@ -216,7 +216,12 @@ const paths: Record<IconName, ReactNode> = {
   ),
 };
 
-export function Icon({ name, size = 20, color = "currentColor" }: IconProps) {
+export function Icon({
+  name,
+  size = 20,
+  color = "currentColor",
+  ...rest
+}: IconProps) {
   return (
     <svg
       width={size}
@@ -227,6 +232,7 @@ export function Icon({ name, size = 20, color = "currentColor" }: IconProps) {
       strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
+      {...rest}
     >
       {paths[name] ?? paths.activity}
     </svg>

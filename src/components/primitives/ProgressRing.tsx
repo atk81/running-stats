@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 
-export interface ProgressRingProps {
+export interface ProgressRingProps extends HTMLAttributes<HTMLDivElement> {
   value: number;
   size?: number;
   stroke?: number;
@@ -16,12 +16,20 @@ export function ProgressRing({
   color = "var(--ignite)",
   trackColor = "var(--ink-3)",
   children,
+  style,
+  ...rest
 }: ProgressRingProps) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const off = c * (1 - value / 100);
+  const wrapperStyle: CSSProperties = {
+    position: "relative",
+    width: size,
+    height: size,
+    ...style,
+  };
   return (
-    <div style={{ position: "relative", width: size, height: size }}>
+    <div style={wrapperStyle} {...rest}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
         <circle
           cx={size / 2}

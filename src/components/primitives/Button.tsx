@@ -24,7 +24,7 @@ export interface ButtonProps
 const variantStyles: Record<ButtonVariant, CSSProperties> = {
   primary: {
     background: "var(--ignite)",
-    color: "#fff",
+    color: "var(--accent-fg)",
     boxShadow: "0 4px 16px rgba(255,104,0,0.28)",
   },
   dark: { background: "var(--ink)", color: "var(--bone)" },
@@ -42,7 +42,7 @@ const variantStyles: Record<ButtonVariant, CSSProperties> = {
   pulse: { background: "var(--pulse)", color: "var(--ink)", fontWeight: 700 },
   strava: {
     background: "#FC4C02",
-    color: "#fff",
+    color: "var(--accent-fg)",
     boxShadow: "0 4px 16px rgba(252,76,2,0.28)",
   },
   outline: {
@@ -50,6 +50,18 @@ const variantStyles: Record<ButtonVariant, CSSProperties> = {
     color: "var(--ignite)",
     border: "1.5px solid var(--ignite)",
   },
+};
+
+const STATIC_BASE: CSSProperties = {
+  fontWeight: 600,
+  border: 0,
+  fontFamily: "var(--font-body)",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  transition:
+    "transform 120ms var(--ease-snap), background 120ms, box-shadow 120ms, border-color 120ms",
 };
 
 function basePadding(variant: ButtonVariant, size: ButtonSize): string {
@@ -72,27 +84,18 @@ export function Button({
   onMouseLeave,
   ...rest
 }: ButtonProps) {
-  const baseStyle: CSSProperties = {
+  const sizedStyle: CSSProperties = {
     padding: basePadding(variant, size),
     fontSize: size === "sm" ? 12 : size === "lg" ? 16 : 14,
-    fontWeight: 600,
     borderRadius: size === "lg" ? 12 : 10,
-    border: 0,
     cursor: disabled ? "not-allowed" : "pointer",
-    fontFamily: "var(--font-body)",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
     opacity: disabled ? 0.5 : 1,
-    transition:
-      "transform 120ms var(--ease-snap), background 120ms, box-shadow 120ms, border-color 120ms",
   };
 
   return (
     <button
       disabled={disabled}
-      style={{ ...baseStyle, ...variantStyles[variant], ...style }}
+      style={{ ...STATIC_BASE, ...sizedStyle, ...variantStyles[variant], ...style }}
       onMouseDown={(e) => {
         if (!disabled) e.currentTarget.style.transform = "scale(0.97)";
         onMouseDown?.(e);
