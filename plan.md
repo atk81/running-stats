@@ -29,16 +29,16 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 - [x] Copy SVG assets from prototype to `public/assets/`
 
 ### Appwrite Setup
-- [ ] Create Appwrite project `runstats`
-- [ ] Create database `runstats_db`
-- [ ] Create collection `users` with all attributes and indexes
-- [ ] Create collection `goals` with all attributes and indexes
-- [ ] Create collection `activities` with all attributes and indexes
-- [ ] Create collection `milestones` with all attributes and indexes
-- [ ] Create collection `personal_records` with all attributes and indexes
-- [ ] Create storage bucket `avatars` (max 10MB, image/jpeg, image/png, image/webp)
-- [ ] Create storage bucket `exports` (max 5MB)
-- [ ] Set up document-level permissions on all collections
+- [x] Create Appwrite project `runstats`
+- [x] Create database `runstats_db`
+- [x] Create collection `users` with all attributes and indexes
+- [x] Create collection `goals` with all attributes and indexes
+- [x] Create collection `activities` with all attributes and indexes
+- [x] Create collection `milestones` with all attributes and indexes
+- [x] Create collection `personal_records` with all attributes and indexes
+- [x] Create storage bucket `avatars` (max 10MB, image/jpeg, image/png, image/webp)
+- [x] Create storage bucket `exports` (max 5MB)
+- [x] Set up document-level permissions on all collections
 
 ### Design System
 - [ ] Port `colors_and_type.css` to `globals.css` (CSS custom properties + keyframes)
