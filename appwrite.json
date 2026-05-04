@@ -123,6 +123,13 @@
                     "type": "datetime",
                     "required": false,
                     "array": false
+                },
+                {
+                    "key": "syncInProgress",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": false
                 }
             ],
             "indexes": [
