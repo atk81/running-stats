@@ -79,11 +79,11 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 ## Phase 2: Onboarding + Sync (Week 2-3)
 
 ### Onboarding Flow
-- [ ] Create `app/(auth)/onboarding/page.tsx`
-- [ ] Port Step 1: Photo upload with duotone preview (`PhotoUpload.tsx`, `DuotonePreview.tsx`)
-- [ ] Implement avatar upload to Appwrite Storage `avatars` bucket
-- [ ] Port Step 2: Goal setting (`GoalSetting.tsx`) — 4 built-in goals
-- [ ] Implement goal creation API: `POST /api/goals` (creates 4 default goals)
+- [x] Create `app/(auth)/onboarding/page.tsx`
+- [x] Port Step 1: Photo upload with duotone preview (`PhotoUpload.tsx`, `DuotonePreview.tsx`)
+- [x] Implement avatar upload to Appwrite Storage `avatars` bucket <!-- shared `media` bucket per LESSONS free-tier cap -->
+- [x] Port Step 2: Goal setting (`GoalSetting.tsx`) — 4 built-in goals
+- [x] Implement goal creation API: `POST /api/goals` (creates 4 default goals)
 - [ ] Port Step 3: Auto-share preferences (`AutoSharePrefs.tsx`)
 - [ ] Mark `onboardingComplete = true` on user document after step 3
 
