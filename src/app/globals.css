@@ -324,3 +324,67 @@ html, body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Duotone helper — used by onboarding photo preview + share templates */
+.rs-duotone-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--duotone-accent, var(--ignite));
+}
+.rs-duotone-wrap img,
+.rs-duotone-wrap canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mix-blend-mode: luminosity;
+  filter: contrast(1.15) brightness(0.95);
+}
+
+/* Onboarding responsive layout */
+.rs-onboard-shell {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 56px 40px;
+}
+.rs-onboard-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+.rs-onboard-heading {
+  font-family: var(--font-heading);
+  font-size: 54px;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin: 8px 0 12px;
+  color: var(--ink);
+}
+.rs-onboard-photo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+.rs-onboard-goals-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.rs-onboard-footer {
+  margin-top: 32px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+  .rs-onboard-shell { padding: 32px 20px; }
+  .rs-onboard-heading { font-size: 36px; line-height: 1.1; }
+  .rs-onboard-photo-grid { grid-template-columns: 1fr; gap: 16px; }
+  .rs-onboard-goals-grid { grid-template-columns: 1fr; }
+}
+

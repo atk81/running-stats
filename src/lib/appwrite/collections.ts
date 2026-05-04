@@ -10,6 +10,12 @@ export const COLLECTIONS = {
 
 export type CollectionId = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];
 
+export const BUCKETS = {
+  media: "media",
+} as const;
+
+export type BucketId = (typeof BUCKETS)[keyof typeof BUCKETS];
+
 export const ATTRS = {
   users: {
     userId: "userId",

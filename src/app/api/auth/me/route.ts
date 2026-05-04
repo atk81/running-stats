@@ -1,33 +1,25 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ATTRS, COLLECTIONS, DATABASE_ID } from "@/lib/appwrite/collections";
-import { getAdminClient, getSessionClient } from "@/lib/appwrite/server";
-import { clearSessionCookie, readSessionSecret } from "@/lib/auth/cookies";
+import { getAdminClient } from "@/lib/appwrite/server";
+import { requireUser } from "@/lib/auth/requireUser";
 import type { MeResponse } from "@/lib/auth/types";
 import { DEFAULT_ACCENT_COLOR } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const sessionSecret = readSessionSecret(cookieStore);
-  if (!sessionSecret) {
-    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-  }
-  let userId: string;
-  try {
-    const { account } = getSessionClient(sessionSecret);
-    const me = await account.get();
-    userId = me.$id;
-  } catch {
-    clearSessionCookie(cookieStore);
-    return NextResponse.json({ error: "session_invalid" }, { status: 401 });
-  }
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
+
   try {
     const { tablesDB } = getAdminClient();
-    const doc = await tablesDB.getRow(DATABASE_ID, COLLECTIONS.users, userId);
+    const doc = await tablesDB.getRow(
+      DATABASE_ID,
+      COLLECTIONS.users,
+      auth.userId,
+    );
     const profile: MeResponse = {
-      userId,
+      userId: auth.userId,
       name: String(doc[ATTRS.users.name] ?? ""),
       handle: String(doc[ATTRS.users.handle] ?? ""),
       city: String(doc[ATTRS.users.city] ?? ""),
