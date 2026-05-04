@@ -76,16 +76,8 @@ export async function POST(req: NextRequest) {
   const filename = `${fileId}.${ext}`;
   const { storage, tablesDB } = getAdminClient();
 
+  const upload = new File([file], filename, { type: file.type });
   await deleteFileIfExists(BUCKETS.media, fileId);
-
-  let buffer: ArrayBuffer;
-  try {
-    buffer = await file.arrayBuffer();
-  } catch (err) {
-    console.error("avatar: failed to read file body", err);
-    return NextResponse.json({ error: "file_read_failed" }, { status: 400 });
-  }
-  const upload = new File([buffer], filename, { type: file.type });
 
   let createdId: string;
   try {

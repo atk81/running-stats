@@ -21,3 +21,6 @@ export type { CountUpProps } from "./CountUp";
 
 export { Icon } from "./Icon";
 export type { IconName, IconProps } from "./Icon";
+
+export { FieldError } from "./FieldError";
+export type { FieldErrorProps } from "./FieldError";

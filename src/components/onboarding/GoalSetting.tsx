@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { Icon, Input } from "@/components/primitives";
+import { FieldError, Icon, Input } from "@/components/primitives";
 import type { GoalKey } from "@/lib/goals/defaults";
 
 export interface GoalFormState {
@@ -15,7 +15,6 @@ export interface GoalSettingProps {
   accent: string;
   values: GoalFormState;
   fieldErrors: Partial<Record<GoalKey, string>>;
-  saveError: string | null;
   onChange: (key: GoalKey, value: string) => void;
 }
 
@@ -30,18 +29,10 @@ const nudgeStyle: CSSProperties = {
   gap: 12,
 };
 
-const errorTextStyle: CSSProperties = {
-  marginTop: 4,
-  fontFamily: "var(--font-mono)",
-  fontSize: 11,
-  color: "var(--ignite-deep)",
-};
-
 export function GoalSetting({
   accent,
   values,
   fieldErrors,
-  saveError,
   onChange,
 }: GoalSettingProps) {
   const renderField = (
@@ -59,12 +50,16 @@ export function GoalSetting({
         focused={focused}
         onChange={(e) => onChange(key, e.target.value)}
       />
-      {fieldErrors[key] && <div style={errorTextStyle}>{fieldErrors[key]}</div>}
+      {fieldErrors[key] && (
+        <FieldError style={{ marginTop: 4, fontSize: 11 }}>
+          {fieldErrors[key]}
+        </FieldError>
+      )}
     </div>
   );
 
   return (
-    <div>
+    <>
       <div
         style={{
           display: "grid",
@@ -90,19 +85,6 @@ export function GoalSetting({
           activity. For now, edit these to whatever feels right.
         </div>
       </div>
-      {saveError && (
-        <div
-          role="alert"
-          style={{
-            marginTop: 12,
-            fontFamily: "var(--font-mono)",
-            fontSize: 12,
-            color: "var(--ignite-deep)",
-          }}
-        >
-          {saveError}
-        </div>
-      )}
-    </div>
+    </>
   );
 }

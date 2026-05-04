@@ -2,6 +2,10 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { GoalFormState } from "@/components/onboarding/GoalSetting";
+import {
+  GoalsValidationError,
+  type GoalFieldError,
+} from "@/lib/goals/validate";
 
 interface AvatarUploadResponse {
   avatarFileId: string;
@@ -16,9 +20,9 @@ interface GoalsSaveResponse {
   goals: unknown[];
 }
 
-interface GoalsSaveError {
+interface GoalsSaveErrorBody {
   error: string;
-  details?: { field: string; message: string }[];
+  details?: GoalFieldError[];
 }
 
 async function uploadAvatarRequest(file: File): Promise<AvatarUploadResponse> {
@@ -55,13 +59,11 @@ async function saveGoalsRequest(
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as GoalsSaveError | null;
-    const error = new Error(err?.error ?? "save_failed");
-    if (err?.details) {
-      (error as Error & { fieldErrors?: GoalsSaveError["details"] }).fieldErrors =
-        err.details;
+    const err = (await res.json().catch(() => null)) as GoalsSaveErrorBody | null;
+    if (err?.details && err.details.length > 0) {
+      throw new GoalsValidationError(err.details);
     }
-    throw error;
+    throw new Error(err?.error ?? "save_failed");
   }
   return (await res.json()) as GoalsSaveResponse;
 }
@@ -77,11 +79,7 @@ export function useUploadAvatar() {
 }
 
 export function useSaveGoals() {
-  const qc = useQueryClient();
   return useMutation({
     mutationFn: saveGoalsRequest,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["goals"] });
-    },
   });
 }

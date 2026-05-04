@@ -6,7 +6,7 @@ import {
   type CSSProperties,
   type DragEvent,
 } from "react";
-import { Icon } from "@/components/primitives";
+import { FieldError, Icon, type IconName } from "@/components/primitives";
 
 export interface PhotoUploadProps {
   accent: string;
@@ -14,6 +14,42 @@ export interface PhotoUploadProps {
   uploading: boolean;
   errorMessage: string | null;
   onSelectFile: (file: File) => void;
+}
+
+interface DropZoneStatus {
+  icon: IconName;
+  iconColor: string;
+  caption: string;
+  sub: string;
+}
+
+function statusFor(
+  uploading: boolean,
+  hasPhoto: boolean,
+  accent: string,
+): DropZoneStatus {
+  if (uploading) {
+    return {
+      icon: "upload",
+      iconColor: "var(--fg-3)",
+      caption: "Uploading…",
+      sub: "hold tight",
+    };
+  }
+  if (hasPhoto) {
+    return {
+      icon: "check",
+      iconColor: accent,
+      caption: "Photo uploaded",
+      sub: "tap to replace",
+    };
+  }
+  return {
+    icon: "upload",
+    iconColor: "var(--fg-3)",
+    caption: "Drop a photo, or click to upload",
+    sub: "PNG / JPG / WEBP · up to 10MB",
+  };
 }
 
 const dropZoneStyle = (active: boolean): CSSProperties => ({
@@ -50,6 +86,7 @@ export function PhotoUpload({
   onSelectFile,
 }: PhotoUploadProps) {
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const status = statusFor(uploading, hasPhoto, accent);
 
   const handleFile = (file: File | undefined) => {
     if (file) onSelectFile(file);
@@ -65,16 +102,12 @@ export function PhotoUpload({
     handleFile(e.dataTransfer.files?.[0]);
   };
 
-  const onDragOver = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
-
   return (
     <div>
       <div
         onClick={() => fileRef.current?.click()}
         onDrop={onDrop}
-        onDragOver={onDragOver}
+        onDragOver={(e) => e.preventDefault()}
         style={dropZoneStyle(hasPhoto)}
         role="button"
         tabIndex={0}
@@ -85,25 +118,11 @@ export function PhotoUpload({
           }
         }}
       >
-        {uploading ? (
-          <div style={{ textAlign: "center" }}>
-            <Icon name="upload" size={32} color="var(--fg-3)" />
-            <div style={captionStyle}>Uploading…</div>
-            <div style={subtleStyle}>hold tight</div>
-          </div>
-        ) : hasPhoto ? (
-          <div style={{ textAlign: "center" }}>
-            <Icon name="check" size={28} color={accent} />
-            <div style={{ ...captionStyle, marginTop: 8 }}>Photo uploaded</div>
-            <div style={{ ...subtleStyle, marginTop: 4 }}>tap to replace</div>
-          </div>
-        ) : (
-          <div style={{ textAlign: "center" }}>
-            <Icon name="upload" size={32} color="var(--fg-3)" />
-            <div style={captionStyle}>Drop a photo, or click to upload</div>
-            <div style={subtleStyle}>PNG / JPG / WEBP &middot; up to 10MB</div>
-          </div>
-        )}
+        <div style={{ textAlign: "center" }}>
+          <Icon name={status.icon} size={32} color={status.iconColor} />
+          <div style={captionStyle}>{status.caption}</div>
+          <div style={subtleStyle}>{status.sub}</div>
+        </div>
         <input
           ref={fileRef}
           type="file"
@@ -113,17 +132,7 @@ export function PhotoUpload({
         />
       </div>
       {errorMessage && (
-        <div
-          role="alert"
-          style={{
-            marginTop: 10,
-            fontFamily: "var(--font-mono)",
-            fontSize: 12,
-            color: "var(--ignite-deep)",
-          }}
-        >
-          {errorMessage}
-        </div>
+        <FieldError style={{ marginTop: 10 }}>{errorMessage}</FieldError>
       )}
     </div>
   );
