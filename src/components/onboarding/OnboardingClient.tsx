@@ -4,6 +4,11 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { Button, FieldError, Icon } from "@/components/primitives";
 import { Wordmark } from "@/components/chrome/Wordmark";
+import {
+  AutoSharePrefs,
+  type AutoShareKey,
+  type AutoShareValues,
+} from "./AutoSharePrefs";
 import { DuotonePreview } from "./DuotonePreview";
 import { GoalFormState, GoalSetting } from "./GoalSetting";
 import { OnboardingStep } from "./OnboardingStep";
@@ -18,6 +23,7 @@ import {
   validateGoalInputs,
 } from "@/lib/goals/validate";
 import {
+  useFinalizeOnboarding,
   useSaveGoals,
   useUploadAvatar,
 } from "@/lib/hooks/useOnboardingMutations";
@@ -31,6 +37,7 @@ export interface OnboardingClientProps {
   accentColor: string;
   initialAvatarFileId: string;
   initialGoals: OnboardingInitialGoal[];
+  initialAutoShare: AutoShareValues;
 }
 
 const TOTAL_STEPS = 3;
@@ -67,6 +74,7 @@ export function OnboardingClient({
   accentColor: accent,
   initialAvatarFileId,
   initialGoals,
+  initialAutoShare,
 }: OnboardingClientProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -79,9 +87,11 @@ export function OnboardingClient({
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<GoalKey, string>>
   >({});
+  const [autoShare, setAutoShare] = useState<AutoShareValues>(initialAutoShare);
 
   const uploadAvatar = useUploadAvatar();
   const saveGoals = useSaveGoals();
+  const finalize = useFinalizeOnboarding();
 
   useEffect(() => {
     if (!photoPreview) return;
@@ -129,6 +139,19 @@ export function OnboardingClient({
       : null;
 
   const hasPhoto = Boolean(avatarFileId || photoPreview);
+
+  const onAutoShareChange = (key: AutoShareKey, next: boolean) => {
+    setAutoShare((prev) => ({ ...prev, [key]: next }));
+  };
+
+  const onFinish = async () => {
+    try {
+      await finalize.mutateAsync(autoShare);
+      router.push("/dashboard");
+    } catch {
+      // surfaced via finalize.error inline
+    }
+  };
 
   return (
     <div style={containerStyle}>
@@ -228,12 +251,10 @@ export function OnboardingClient({
           <OnboardingStep
             step={3}
             total={TOTAL_STEPS}
-            heading="Almost done."
+            heading="Auto-share?"
             description={
               <>
-                Auto-share preferences land in the next update. For now, your
-                photo and goals are saved — you can open the dashboard from
-                the connect page.
+                When you hit a milestone, generate a share card automatically.
               </>
             }
             footer={
@@ -241,25 +262,27 @@ export function OnboardingClient({
                 <Button variant="ghostLight" onClick={() => setStep(1)}>
                   Back
                 </Button>
-                <Button variant="dark" onClick={() => router.push("/")}>
-                  Return home
+                <Button
+                  variant="primary"
+                  onClick={onFinish}
+                  disabled={finalize.isPending}
+                >
+                  {finalize.isPending ? "Saving…" : "Open dashboard"}{" "}
+                  <Icon name="arrowRight" size={16} />
                 </Button>
               </>
             }
           >
-            <div
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: 16,
-                padding: 20,
-                fontFamily: "var(--font-mono)",
-                fontSize: 12,
-                color: "var(--fg-3)",
-              }}
-            >
-              Step 3 — auto-share preferences — coming soon.
-            </div>
+            <AutoSharePrefs
+              accent={accent}
+              values={autoShare}
+              onChange={onAutoShareChange}
+            />
+            {finalize.error && (
+              <FieldError style={{ marginTop: 12 }}>
+                {finalize.error.message}
+              </FieldError>
+            )}
           </OnboardingStep>
         )}
       </div>

@@ -53,11 +53,20 @@ export default async function OnboardingPage() {
     });
   }
 
+  const initialAutoShare = {
+    autoSharePR: Boolean(userDoc[ATTRS.users.autoSharePR] ?? true),
+    autoShareVolume: Boolean(userDoc[ATTRS.users.autoShareVolume] ?? true),
+    autoShareWeeklyRecap: Boolean(
+      userDoc[ATTRS.users.autoShareWeeklyRecap] ?? true,
+    ),
+  };
+
   return (
     <OnboardingClient
       accentColor={accentColor}
       initialAvatarFileId={initialAvatarFileId}
       initialGoals={initialGoals}
+      initialAutoShare={initialAutoShare}
     />
   );
 }
