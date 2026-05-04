@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { AuthedHome } from "@/components/auth/AuthedHome";
 import { ConnectScreen } from "@/components/connect/ConnectScreen";
 import { ATTRS } from "@/lib/appwrite/collections";
 import { getUserDoc } from "@/lib/appwrite/userDoc";
@@ -11,12 +10,13 @@ export default async function HomePage() {
   const userId = await getOptionalUserId();
   if (!userId) return <ConnectScreen />;
 
+  let userDoc;
   try {
-    const userDoc = await getUserDoc(userId);
-    if (!userDoc[ATTRS.users.onboardingComplete]) redirect("/onboarding");
+    userDoc = await getUserDoc(userId);
   } catch {
     redirect("/onboarding");
   }
 
-  return <AuthedHome />;
+  if (!userDoc[ATTRS.users.onboardingComplete]) redirect("/onboarding");
+  redirect("/dashboard");
 }
