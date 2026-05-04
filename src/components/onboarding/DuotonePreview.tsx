@@ -51,37 +51,47 @@ export function DuotonePreview({ src }: DuotonePreviewProps) {
   return (
     <div
       style={{
-        background: "var(--ink)",
-        borderRadius: 16,
-        padding: 20,
-        color: "var(--bone)",
         display: "flex",
         flexDirection: "column",
-        gap: 14,
+        gap: 12,
+        height: "100%",
       }}
     >
-      <Label style={{ color: "var(--fg-3)" }}>Live preview — duotone</Label>
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 10,
+          flex: "1 1 auto",
+          background: "var(--ink)",
+          borderRadius: 16,
+          padding: 20,
+          color: "var(--bone)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
         }}
       >
-        {VARIANTS.map((v) => (
-          <div key={v.key}>
-            <div
-              style={{
-                ...tileFrameStyle,
-                background: v.cssVar,
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imgSrc} alt="" style={tileImageStyle} />
+        <Label style={{ color: "var(--fg-3)" }}>Live preview — duotone</Label>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            gap: 10,
+          }}
+        >
+          {VARIANTS.map((v) => (
+            <div key={v.key}>
+              <div
+                style={{
+                  ...tileFrameStyle,
+                  background: v.cssVar,
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={imgSrc} alt="" style={tileImageStyle} />
+              </div>
+              <div style={captionStyle}>{v.label}</div>
             </div>
-            <div style={captionStyle}>{v.label}</div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
       <p
         style={{
