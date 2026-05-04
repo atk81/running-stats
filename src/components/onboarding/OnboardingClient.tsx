@@ -4,6 +4,11 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { Button, FieldError, Icon } from "@/components/primitives";
 import { Wordmark } from "@/components/chrome/Wordmark";
+import {
+  AutoSharePrefs,
+  type AutoShareKey,
+  type AutoShareValues,
+} from "./AutoSharePrefs";
 import { DuotonePreview } from "./DuotonePreview";
 import { GoalFormState, GoalSetting } from "./GoalSetting";
 import { OnboardingStep } from "./OnboardingStep";
@@ -18,6 +23,7 @@ import {
   validateGoalInputs,
 } from "@/lib/goals/validate";
 import {
+  useFinalizeOnboarding,
   useSaveGoals,
   useUploadAvatar,
 } from "@/lib/hooks/useOnboardingMutations";
@@ -31,6 +37,7 @@ export interface OnboardingClientProps {
   accentColor: string;
   initialAvatarFileId: string;
   initialGoals: OnboardingInitialGoal[];
+  initialAutoShare: AutoShareValues;
 }
 
 const TOTAL_STEPS = 3;
@@ -63,10 +70,21 @@ function fieldErrorsToMap(
   return map;
 }
 
+const FINALIZE_ERROR_COPY: Record<string, string> = {
+  user_doc_update_failed: "Couldn't save your preferences. Try again.",
+  invalid_body: "Something looks off with the form. Try again.",
+  invalid_json: "Something looks off with the form. Try again.",
+};
+
+function humanizeFinalizeError(message: string): string {
+  return FINALIZE_ERROR_COPY[message] ?? "Couldn't finish onboarding. Try again.";
+}
+
 export function OnboardingClient({
   accentColor: accent,
   initialAvatarFileId,
   initialGoals,
+  initialAutoShare,
 }: OnboardingClientProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -79,9 +97,11 @@ export function OnboardingClient({
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<GoalKey, string>>
   >({});
+  const [autoShare, setAutoShare] = useState<AutoShareValues>(initialAutoShare);
 
   const uploadAvatar = useUploadAvatar();
   const saveGoals = useSaveGoals();
+  const finalize = useFinalizeOnboarding();
 
   useEffect(() => {
     if (!photoPreview) return;
@@ -130,15 +150,22 @@ export function OnboardingClient({
 
   const hasPhoto = Boolean(avatarFileId || photoPreview);
 
+  const onAutoShareChange = (key: AutoShareKey, next: boolean) => {
+    setAutoShare((prev) => ({ ...prev, [key]: next }));
+  };
+
+  const onFinish = () => {
+    finalize.mutate(autoShare, {
+      onSuccess: () => router.push("/dashboard"),
+    });
+  };
+
   return (
     <div style={containerStyle}>
-      <div
-        className="rs-onboard-shell"
-        style={{ maxWidth: 920, margin: "0 auto" }}
-      >
-        <div className="rs-onboard-header">
+      <div className="mx-auto w-full max-w-[920px] px-5 py-8 md:px-10 md:py-14">
+        <div className="mb-10 flex flex-wrap items-center gap-2.5">
           <Wordmark size="md" accent={accent} tone="dark" />
-          <div style={{ marginLeft: "auto" }}>
+          <div className="ml-auto">
             <StepProgress current={step} total={TOTAL_STEPS} accent={accent} />
           </div>
         </div>
@@ -170,7 +197,7 @@ export function OnboardingClient({
               </>
             }
           >
-            <div className="rs-onboard-photo-grid">
+            <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 md:gap-6">
               <PhotoUpload
                 accent={accent}
                 hasPhoto={hasPhoto}
@@ -228,12 +255,10 @@ export function OnboardingClient({
           <OnboardingStep
             step={3}
             total={TOTAL_STEPS}
-            heading="Almost done."
+            heading="Auto-share?"
             description={
               <>
-                Auto-share preferences land in the next update. For now, your
-                photo and goals are saved — you can open the dashboard from
-                the connect page.
+                When you hit a milestone, generate a share card automatically.
               </>
             }
             footer={
@@ -241,25 +266,27 @@ export function OnboardingClient({
                 <Button variant="ghostLight" onClick={() => setStep(1)}>
                   Back
                 </Button>
-                <Button variant="dark" onClick={() => router.push("/")}>
-                  Return home
+                <Button
+                  variant="primary"
+                  onClick={onFinish}
+                  disabled={finalize.isPending}
+                >
+                  {finalize.isPending ? "Saving…" : "Open dashboard"}{" "}
+                  <Icon name="arrowRight" size={16} />
                 </Button>
               </>
             }
           >
-            <div
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: 16,
-                padding: 20,
-                fontFamily: "var(--font-mono)",
-                fontSize: 12,
-                color: "var(--fg-3)",
-              }}
-            >
-              Step 3 — auto-share preferences — coming soon.
-            </div>
+            <AutoSharePrefs
+              accent={accent}
+              values={autoShare}
+              onChange={onAutoShareChange}
+            />
+            {finalize.error && (
+              <FieldError style={{ marginTop: 12 }}>
+                {humanizeFinalizeError(finalize.error.message)}
+              </FieldError>
+            )}
           </OnboardingStep>
         )}
       </div>

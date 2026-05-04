@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { AutoShareValues } from "@/components/onboarding/AutoSharePrefs";
 import type { GoalFormState } from "@/components/onboarding/GoalSetting";
 import {
   GoalsValidationError,
@@ -81,5 +82,43 @@ export function useUploadAvatar() {
 export function useSaveGoals() {
   return useMutation({
     mutationFn: saveGoalsRequest,
+  });
+}
+
+interface FinalizeResponse {
+  onboardingComplete: boolean;
+}
+
+interface FinalizeErrorBody {
+  error: string;
+}
+
+async function finalizeOnboardingRequest(
+  values: AutoShareValues,
+): Promise<FinalizeResponse> {
+  const res = await fetch("/api/users/onboarding", {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(values),
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => null)) as FinalizeErrorBody | null;
+    throw new Error(err?.error ?? "finalize_failed");
+  }
+  return (await res.json()) as FinalizeResponse;
+}
+
+type MeBlob = { onboardingComplete: boolean } & Record<string, unknown>;
+
+export function useFinalizeOnboarding() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: finalizeOnboardingRequest,
+    onSuccess: () => {
+      qc.setQueryData<MeBlob | null>(["me"], (prev) =>
+        prev ? { ...prev, onboardingComplete: true } : prev,
+      );
+    },
   });
 }
