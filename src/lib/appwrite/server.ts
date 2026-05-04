@@ -1,11 +1,12 @@
 import "server-only";
-import { Account, Client, TablesDB, Users } from "node-appwrite";
+import { Account, Client, Storage, TablesDB, Users } from "node-appwrite";
 import { requireEnv } from "@/lib/utils/env";
 
 interface AdminClient {
   client: Client;
   users: Users;
   tablesDB: TablesDB;
+  storage: Storage;
 }
 
 interface SessionClient {
@@ -29,6 +30,7 @@ export function getAdminClient(): AdminClient {
     client,
     users: new Users(client),
     tablesDB: new TablesDB(client),
+    storage: new Storage(client),
   };
   return cachedAdmin;
 }
