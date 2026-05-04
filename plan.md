@@ -84,8 +84,8 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 - [x] Implement avatar upload to Appwrite Storage `avatars` bucket <!-- shared `media` bucket per LESSONS free-tier cap -->
 - [x] Port Step 2: Goal setting (`GoalSetting.tsx`) — 4 built-in goals
 - [x] Implement goal creation API: `POST /api/goals` (creates 4 default goals)
-- [ ] Port Step 3: Auto-share preferences (`AutoSharePrefs.tsx`)
-- [ ] Mark `onboardingComplete = true` on user document after step 3
+- [x] Port Step 3: Auto-share preferences (`AutoSharePrefs.tsx`)
+- [x] Mark `onboardingComplete = true` on user document after step 3
 
 ### Strava Activity Sync
 - [ ] Create `lib/strava/api.ts` (Strava API client with fetch wrapper)
