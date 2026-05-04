@@ -4,6 +4,7 @@ import { ATTRS, COLLECTIONS, DATABASE_ID } from "@/lib/appwrite/collections";
 import { getAdminClient } from "@/lib/appwrite/server";
 import { listAthleteActivities } from "./api";
 import { getValidAccessToken } from "./tokenRefresh";
+import type { SyncErrorCode } from "./errorCodes";
 import {
   StravaAuthError,
   StravaError,
@@ -24,11 +25,7 @@ export interface SyncResult {
   lastSyncAt: string;
 }
 
-export type SyncErrorCode =
-  | "sync_in_progress"
-  | "strava_auth_failed"
-  | "strava_rate_limited"
-  | "sync_failed";
+export type { SyncErrorCode };
 
 export class SyncError extends Error {
   readonly code: SyncErrorCode;
@@ -172,12 +169,20 @@ export async function handleSync(userId: string): Promise<SyncResult> {
 }
 
 async function acquireLock(userId: string): Promise<void> {
+  // Read-then-update is non-atomic: two concurrent POSTs can both see
+  // syncInProgress=false and both proceed. At expected scale (≤5 onboardings/
+  // day) this is theoretical; the deterministic activity rowId (a{stravaId})
+  // makes upserts idempotent so a real race wastes Strava quota but doesn't
+  // corrupt data.
   const { tablesDB } = getAdminClient();
   const row = await tablesDB.getRow(DATABASE_ID, COLLECTIONS.users, userId);
   const inProgress = Boolean(row[ATTRS.users.syncInProgress]);
   const lastSyncAt = row[ATTRS.users.lastSyncAt];
 
   if (inProgress) {
+    // Stale-lock detection uses lastSyncAt as a heartbeat: we stamp it on
+    // both acquire and complete. Missing/unparseable timestamp -> treat as
+    // stale (covers first-ever sync that crashed before the heartbeat).
     const lastMs =
       typeof lastSyncAt === "string" ? Date.parse(lastSyncAt) : NaN;
     const isStale =
@@ -193,6 +198,7 @@ async function acquireLock(userId: string): Promise<void> {
 
   await tablesDB.updateRow(DATABASE_ID, COLLECTIONS.users, userId, {
     [ATTRS.users.syncInProgress]: true,
+    [ATTRS.users.lastSyncAt]: new Date().toISOString(),
   });
 }
 

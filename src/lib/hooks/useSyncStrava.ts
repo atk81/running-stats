@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import type { SyncErrorCode } from "@/lib/strava/errorCodes";
 
 export interface SyncStravaResult {
   ok: true;
@@ -10,15 +11,15 @@ export interface SyncStravaResult {
 }
 
 interface SyncErrorBody {
-  error?: string;
+  error?: SyncErrorCode;
   message?: string;
   retryAfter?: number;
 }
 
 export class SyncMutationError extends Error {
-  readonly code: string;
+  readonly code: SyncErrorCode;
   readonly retryAfter?: number;
-  constructor(code: string, message: string, retryAfter?: number) {
+  constructor(code: SyncErrorCode, message: string, retryAfter?: number) {
     super(message);
     this.name = "SyncMutationError";
     this.code = code;
@@ -43,7 +44,7 @@ async function syncStravaRequest(): Promise<SyncStravaResult> {
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as SyncErrorBody | null;
     throw new SyncMutationError(
-      body?.error ?? "sync_failed",
+      (body?.error ?? "sync_failed") as SyncErrorCode,
       body?.message ?? "Sync failed",
       body?.retryAfter,
     );

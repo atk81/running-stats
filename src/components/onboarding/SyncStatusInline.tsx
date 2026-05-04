@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { Button, Icon } from "@/components/primitives";
+import type { SyncErrorCode } from "@/lib/strava/errorCodes";
 
 export type SyncStatusState = "loading" | "success" | "error";
 
@@ -9,13 +10,13 @@ export interface SyncStatusInlineProps {
   state: SyncStatusState;
   syncedCount?: number;
   elapsedSec?: number;
-  errorCode?: string;
+  errorCode?: SyncErrorCode;
   onRetry?: () => void;
   onSkip?: () => void;
   retryPending?: boolean;
 }
 
-const ERROR_CAPTIONS: Record<string, string> = {
+const ERROR_CAPTIONS: Record<SyncErrorCode, string> = {
   strava_auth_failed:
     "Your Strava connection expired. Reconnect on the dashboard.",
   strava_rate_limited:
@@ -28,9 +29,9 @@ const ERROR_CAPTIONS: Record<string, string> = {
     "Couldn't reach Strava. Check your connection and try again.",
 };
 
-function captionForError(code?: string): string {
+function captionForError(code?: SyncErrorCode): string {
   if (!code) return ERROR_CAPTIONS.sync_failed;
-  return ERROR_CAPTIONS[code] ?? ERROR_CAPTIONS.sync_failed;
+  return ERROR_CAPTIONS[code];
 }
 
 const cardStyle: CSSProperties = {
@@ -141,17 +142,6 @@ const warnIconStyle: CSSProperties = {
   color: "var(--ignite)",
 };
 
-// Scoped pulse-dot keyframe override per design.md — globals.css uses
-// white-glow rgba intended for dark surfaces; on white card, ignite glow.
-const SCOPED_KEYFRAMES = `
-  @keyframes rs-pulse-dot-ignite {
-    0% { box-shadow: 0 0 0 0 rgba(255, 104, 0, 0.55); }
-    70% { box-shadow: 0 0 0 14px rgba(255, 104, 0, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 104, 0, 0); }
-  }
-  .rs-sync-pulse-dot { animation: rs-pulse-dot-ignite 1.6s var(--ease-out) infinite; }
-`;
-
 function pluralizeRuns(n: number): string {
   return n === 1 ? "1 run is ready." : `${n} runs are ready.`;
 }
@@ -167,11 +157,15 @@ export function SyncStatusInline({
 }: SyncStatusInlineProps) {
   return (
     <section style={cardStyle} role="status" aria-live="polite">
-      <style dangerouslySetInnerHTML={{ __html: SCOPED_KEYFRAMES }} />
       {state === "loading" && (
         <>
           <p style={eyebrowStyle}>
-            <span className="rs-sync-pulse-dot" style={dotStyle} />
+            <span
+              style={{
+                ...dotStyle,
+                animation: "rs-pulse-dot-ignite 1.6s var(--ease-out) infinite",
+              }}
+            />
             Strava sync
           </p>
           <h3 style={headingStyle}>Pulling your runs from Strava…</h3>

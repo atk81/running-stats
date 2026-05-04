@@ -107,10 +107,14 @@ export function OnboardingClient({
   const syncStrava = useSyncStrava();
 
   const [syncState, setSyncState] = useState<SyncStatusState | null>(null);
-  const [syncedCount, setSyncedCount] = useState(0);
-  const [syncErrorCode, setSyncErrorCode] = useState<string | undefined>();
   const [elapsedSec, setElapsedSec] = useState(0);
   const elapsedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const syncedCount = syncStrava.data?.synced ?? 0;
+  const syncErrorCode =
+    syncStrava.error instanceof SyncMutationError
+      ? syncStrava.error.code
+      : undefined;
 
   useEffect(() => {
     if (!photoPreview) return;
@@ -136,6 +140,12 @@ export function OnboardingClient({
       }
     };
   }, [syncState]);
+
+  useEffect(() => {
+    if (syncState !== "success") return;
+    const t = setTimeout(() => router.push("/dashboard"), 600);
+    return () => clearTimeout(t);
+  }, [syncState, router]);
 
   const onSelectFile = async (file: File) => {
     setPhotoError(null);
@@ -187,22 +197,18 @@ export function OnboardingClient({
 
   const runSync = async () => {
     setElapsedSec(0);
+    syncStrava.reset();
     setSyncState("loading");
-    setSyncErrorCode(undefined);
     try {
-      const result = await syncStrava.mutateAsync();
-      setSyncedCount(result.synced);
+      await syncStrava.mutateAsync();
       setSyncState("success");
-      setTimeout(goToDashboard, 600);
     } catch (err) {
       const code =
         err instanceof SyncMutationError ? err.code : "sync_failed";
       if (code === "sync_in_progress") {
-        // Race with concurrent sync — just go to dashboard.
         goToDashboard();
         return;
       }
-      setSyncErrorCode(code);
       setSyncState("error");
     }
   };
