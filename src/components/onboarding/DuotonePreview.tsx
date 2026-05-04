@@ -15,11 +15,20 @@ const VARIANTS: AccentVariant[] = [
 
 const PLACEHOLDER_SRC = "/assets/placeholder-portrait.svg";
 
-const tileShellStyle: CSSProperties = {
+const tileFrameStyle: CSSProperties = {
   width: "100%",
-  aspectRatio: "3/4",
+  aspectRatio: "3 / 4",
   borderRadius: 8,
   overflow: "hidden",
+};
+
+const tileImageStyle: CSSProperties = {
+  width: "100%",
+  height: "100%",
+  display: "block",
+  objectFit: "cover",
+  mixBlendMode: "luminosity",
+  filter: "contrast(1.15) brightness(0.95)",
 };
 
 const captionStyle: CSSProperties = {
@@ -46,12 +55,14 @@ export function DuotonePreview({ src }: DuotonePreviewProps) {
         borderRadius: 16,
         padding: 20,
         color: "var(--bone)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
       }}
     >
       <Label style={{ color: "var(--fg-3)" }}>Live preview — duotone</Label>
       <div
         style={{
-          marginTop: 14,
           display: "grid",
           gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
           gap: 10,
@@ -60,33 +71,30 @@ export function DuotonePreview({ src }: DuotonePreviewProps) {
         {VARIANTS.map((v) => (
           <div key={v.key}>
             <div
-              className="rs-duotone-wrap"
-              style={
-                {
-                  ...tileShellStyle,
-                  "--duotone-accent": v.cssVar,
-                } as CSSProperties
-              }
+              style={{
+                ...tileFrameStyle,
+                background: v.cssVar,
+              }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imgSrc} alt="" />
+              <img src={imgSrc} alt="" style={tileImageStyle} />
             </div>
             <div style={captionStyle}>{v.label}</div>
           </div>
         ))}
       </div>
-      <div
+      <p
         style={{
+          margin: 0,
           fontFamily: "var(--font-mono)",
           fontSize: 11,
           color: "var(--fg-3)",
-          marginTop: 14,
           lineHeight: 1.5,
         }}
       >
         duotone is applied at render-time, so you can switch accents per
         milestone.
-      </div>
+      </p>
     </div>
   );
 }
