@@ -324,3 +324,20 @@ html, body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Duotone helper — used by onboarding photo preview + share templates */
+.rs-duotone-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--duotone-accent, var(--ignite));
+}
+.rs-duotone-wrap img,
+.rs-duotone-wrap canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mix-blend-mode: luminosity;
+  filter: contrast(1.15) brightness(0.95);
+}
+
