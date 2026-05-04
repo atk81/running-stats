@@ -83,24 +83,48 @@ export async function GET(req: NextRequest) {
     encrypt(token.refresh_token),
   ]);
 
+  let userRowExists = false;
   try {
-    await tablesDB.upsertRow(DATABASE_ID, COLLECTIONS.users, userId, {
-      [ATTRS.users.userId]: userId,
-      [ATTRS.users.name]: name,
-      [ATTRS.users.handle]: handle,
-      [ATTRS.users.city]: city,
-      [ATTRS.users.stravaAthleteId]: athleteId,
-      [ATTRS.users.stravaAccessToken]: encAccess,
-      [ATTRS.users.stravaRefreshToken]: encRefresh,
-      [ATTRS.users.stravaTokenExpiresAt]: token.expires_at,
-      [ATTRS.users.accentColor]: DEFAULT_ACCENT_COLOR,
-      [ATTRS.users.autoSharePR]: true,
-      [ATTRS.users.autoShareVolume]: true,
-      [ATTRS.users.autoShareWeeklyRecap]: true,
-      [ATTRS.users.onboardingComplete]: false,
-    });
+    await tablesDB.getRow(DATABASE_ID, COLLECTIONS.users, userId);
+    userRowExists = true;
   } catch (err) {
-    console.error("callback: upsert users doc failed", err);
+    if (!(err instanceof AppwriteException) || err.code !== 404) {
+      console.error("callback: users.getRow probe failed", err);
+      return NextResponse.json({ error: "user_doc_probe_failed" }, { status: 500 });
+    }
+  }
+
+  const tokenFields = {
+    [ATTRS.users.stravaAccessToken]: encAccess,
+    [ATTRS.users.stravaRefreshToken]: encRefresh,
+    [ATTRS.users.stravaTokenExpiresAt]: token.expires_at,
+  };
+
+  try {
+    if (userRowExists) {
+      await tablesDB.updateRow(
+        DATABASE_ID,
+        COLLECTIONS.users,
+        userId,
+        tokenFields,
+      );
+    } else {
+      await tablesDB.upsertRow(DATABASE_ID, COLLECTIONS.users, userId, {
+        [ATTRS.users.userId]: userId,
+        [ATTRS.users.name]: name,
+        [ATTRS.users.handle]: handle,
+        [ATTRS.users.city]: city,
+        [ATTRS.users.stravaAthleteId]: athleteId,
+        [ATTRS.users.accentColor]: DEFAULT_ACCENT_COLOR,
+        [ATTRS.users.autoSharePR]: true,
+        [ATTRS.users.autoShareVolume]: true,
+        [ATTRS.users.autoShareWeeklyRecap]: true,
+        [ATTRS.users.onboardingComplete]: false,
+        ...tokenFields,
+      });
+    }
+  } catch (err) {
+    console.error("callback: write users doc failed", err);
     return NextResponse.json({ error: "user_doc_upsert_failed" }, { status: 500 });
   }
 
