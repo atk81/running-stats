@@ -53,13 +53,16 @@ function statusFor(
 }
 
 const dropZoneStyle = (active: boolean): CSSProperties => ({
+  position: "relative",
   border: `1.5px dashed ${active ? "var(--ignite)" : "var(--border-strong)"}`,
   borderRadius: 16,
   padding: 32,
-  display: "grid",
-  placeItems: "center",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
   background: "#FBFBFD",
   minHeight: 280,
+  height: "100%",
   cursor: "pointer",
   transition: "border-color 120ms, background 120ms",
 });
@@ -118,7 +121,14 @@ export function PhotoUpload({
           }
         }}
       >
-        <div style={{ textAlign: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+          }}
+        >
           <Icon name={status.icon} size={32} color={status.iconColor} />
           <div style={captionStyle}>{status.caption}</div>
           <div style={subtleStyle}>{status.sub}</div>
@@ -128,7 +138,13 @@ export function PhotoUpload({
           type="file"
           accept="image/jpeg,image/png,image/webp"
           onChange={onChange}
-          style={{ display: "none" }}
+          style={{
+            position: "absolute",
+            width: 0,
+            height: 0,
+            opacity: 0,
+            pointerEvents: "none",
+          }}
         />
       </div>
       {errorMessage && (
