@@ -109,12 +109,16 @@ async function finalizeOnboardingRequest(
   return (await res.json()) as FinalizeResponse;
 }
 
+type MeBlob = { onboardingComplete: boolean } & Record<string, unknown>;
+
 export function useFinalizeOnboarding() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: finalizeOnboardingRequest,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["me"] });
+      qc.setQueryData<MeBlob | null>(["me"], (prev) =>
+        prev ? { ...prev, onboardingComplete: true } : prev,
+      );
     },
   });
 }

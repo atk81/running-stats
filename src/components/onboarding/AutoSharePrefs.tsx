@@ -16,9 +16,9 @@ export interface AutoShareOption {
 }
 
 export const AUTO_SHARE_OPTIONS: AutoShareOption[] = [
-  { key: "autoSharePR", label: "Auto-generate on every PR" },
-  { key: "autoShareVolume", label: "Notify at every 1% of volume goal" },
-  { key: "autoShareWeeklyRecap", label: "Weekly recap every Sunday 7pm" },
+  { key: "autoSharePR", label: "Auto-share when you set a new PR" },
+  { key: "autoShareVolume", label: "Auto-share volume milestones" },
+  { key: "autoShareWeeklyRecap", label: "Auto-share a weekly recap" },
 ];
 
 export interface AutoSharePrefsProps {

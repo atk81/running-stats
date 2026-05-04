@@ -70,6 +70,16 @@ function fieldErrorsToMap(
   return map;
 }
 
+const FINALIZE_ERROR_COPY: Record<string, string> = {
+  user_doc_update_failed: "Couldn't save your preferences. Try again.",
+  invalid_body: "Something looks off with the form. Try again.",
+  invalid_json: "Something looks off with the form. Try again.",
+};
+
+function humanizeFinalizeError(message: string): string {
+  return FINALIZE_ERROR_COPY[message] ?? "Couldn't finish onboarding. Try again.";
+}
+
 export function OnboardingClient({
   accentColor: accent,
   initialAvatarFileId,
@@ -144,13 +154,10 @@ export function OnboardingClient({
     setAutoShare((prev) => ({ ...prev, [key]: next }));
   };
 
-  const onFinish = async () => {
-    try {
-      await finalize.mutateAsync(autoShare);
-      router.push("/dashboard");
-    } catch {
-      // surfaced via finalize.error inline
-    }
+  const onFinish = () => {
+    finalize.mutate(autoShare, {
+      onSuccess: () => router.push("/dashboard"),
+    });
   };
 
   return (
@@ -280,7 +287,7 @@ export function OnboardingClient({
             />
             {finalize.error && (
               <FieldError style={{ marginTop: 12 }}>
-                {finalize.error.message}
+                {humanizeFinalizeError(finalize.error.message)}
               </FieldError>
             )}
           </OnboardingStep>
