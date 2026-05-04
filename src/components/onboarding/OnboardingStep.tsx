@@ -14,6 +14,13 @@ const sectionStyle: CSSProperties = {
   animation: "rs-fade-in 280ms var(--ease-out)",
 };
 
+const headingStyle: CSSProperties = {
+  fontFamily: "var(--font-heading)",
+  letterSpacing: "-0.01em",
+  margin: "8px 0 12px",
+  color: "var(--ink)",
+};
+
 const descriptionStyle: CSSProperties = {
   fontFamily: "var(--font-body)",
   color: "var(--fg-3)",
@@ -35,10 +42,15 @@ export function OnboardingStep({
       <Label>
         Step {step} of {total}
       </Label>
-      <h1 className="rs-onboard-heading">{heading}</h1>
+      <h1
+        className="text-[36px] leading-[1.1] md:text-[54px] md:leading-[1.05]"
+        style={headingStyle}
+      >
+        {heading}
+      </h1>
       <p style={descriptionStyle}>{description}</p>
-      <div style={{ marginTop: 32 }}>{children}</div>
-      <div className="rs-onboard-footer">{footer}</div>
+      <div className="mt-8">{children}</div>
+      <div className="mt-8 flex flex-wrap justify-end gap-3">{footer}</div>
     </section>
   );
 }

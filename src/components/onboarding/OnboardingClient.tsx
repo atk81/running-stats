@@ -162,13 +162,10 @@ export function OnboardingClient({
 
   return (
     <div style={containerStyle}>
-      <div
-        className="rs-onboard-shell"
-        style={{ maxWidth: 920, margin: "0 auto" }}
-      >
-        <div className="rs-onboard-header">
+      <div className="mx-auto w-full max-w-[920px] px-5 py-8 md:px-10 md:py-14">
+        <div className="mb-10 flex flex-wrap items-center gap-2.5">
           <Wordmark size="md" accent={accent} tone="dark" />
-          <div style={{ marginLeft: "auto" }}>
+          <div className="ml-auto">
             <StepProgress current={step} total={TOTAL_STEPS} accent={accent} />
           </div>
         </div>
@@ -200,7 +197,7 @@ export function OnboardingClient({
               </>
             }
           >
-            <div className="rs-onboard-photo-grid">
+            <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 md:gap-6">
               <PhotoUpload
                 accent={accent}
                 hasPhoto={hasPhoto}
