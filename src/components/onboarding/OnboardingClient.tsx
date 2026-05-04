@@ -39,6 +39,7 @@ const containerStyle: CSSProperties = {
   minHeight: "100vh",
   background: "var(--bone)",
   color: "var(--ink)",
+  width: "100%",
 };
 
 function buildInitialGoalForm(rows: OnboardingInitialGoal[]): GoalFormState {
@@ -131,7 +132,10 @@ export function OnboardingClient({
 
   return (
     <div style={containerStyle}>
-      <div className="rs-onboard-shell">
+      <div
+        className="rs-onboard-shell"
+        style={{ maxWidth: 920, margin: "0 auto" }}
+      >
         <div className="rs-onboard-header">
           <Wordmark size="md" accent={accent} tone="dark" />
           <div style={{ marginLeft: "auto" }}>
