@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await tablesDB.upsertRow(DATABASE_ID, COLLECTIONS.users, auth.userId, {
+    await tablesDB.updateRow(DATABASE_ID, COLLECTIONS.users, auth.userId, {
       [ATTRS.users.avatarFileId]: createdId,
     });
   } catch (err) {
