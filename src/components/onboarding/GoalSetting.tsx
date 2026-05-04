@@ -60,13 +60,7 @@ export function GoalSetting({
 
   return (
     <>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
-          gap: 16,
-        }}
-      >
+      <div className="rs-onboard-goals-grid">
         {renderField("k5", "5K time", "min")}
         {renderField("k10", "10K time", "min")}
         {renderField("hm", "Half marathon", "h")}

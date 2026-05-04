@@ -6,6 +6,7 @@ interface WordmarkProps {
   size?: "sm" | "md" | "lg";
   accent?: string;
   href?: string;
+  tone?: "light" | "dark";
 }
 
 const SIZE_CONFIG = {
@@ -14,7 +15,12 @@ const SIZE_CONFIG = {
   lg: { mark: 40, text: 36 },
 } as const;
 
-export function Wordmark({ size = "sm", accent = "var(--ignite)", href }: WordmarkProps) {
+export function Wordmark({
+  size = "sm",
+  accent = "var(--ignite)",
+  href,
+  tone = "light",
+}: WordmarkProps) {
   const { mark, text } = SIZE_CONFIG[size];
   const inner: ReactNode = (
     <>
@@ -36,7 +42,7 @@ export function Wordmark({ size = "sm", accent = "var(--ignite)", href }: Wordma
     display: "inline-flex",
     alignItems: "center",
     gap: 10,
-    color: "var(--bone)",
+    color: tone === "dark" ? "var(--ink)" : "var(--bone)",
     textDecoration: "none",
   } as const;
 

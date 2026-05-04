@@ -41,19 +41,6 @@ const containerStyle: CSSProperties = {
   color: "var(--ink)",
 };
 
-const innerStyle: CSSProperties = {
-  maxWidth: 920,
-  margin: "0 auto",
-  padding: "56px 40px",
-};
-
-const headerStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  marginBottom: 40,
-};
-
 function buildInitialGoalForm(rows: OnboardingInitialGoal[]): GoalFormState {
   const seeded: GoalFormState = {
     k5: BUILTIN_GOAL_META.k5.defaultTarget,
@@ -144,9 +131,9 @@ export function OnboardingClient({
 
   return (
     <div style={containerStyle}>
-      <div style={innerStyle}>
-        <div style={headerStyle}>
-          <Wordmark size="md" accent={accent} />
+      <div className="rs-onboard-shell">
+        <div className="rs-onboard-header">
+          <Wordmark size="md" accent={accent} tone="dark" />
           <div style={{ marginLeft: "auto" }}>
             <StepProgress current={step} total={TOTAL_STEPS} accent={accent} />
           </div>
@@ -179,14 +166,7 @@ export function OnboardingClient({
               </>
             }
           >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 24,
-                alignItems: "stretch",
-              }}
-            >
+            <div className="rs-onboard-photo-grid">
               <PhotoUpload
                 accent={accent}
                 hasPhoto={hasPhoto}
