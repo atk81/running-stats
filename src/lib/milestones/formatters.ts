@@ -1,4 +1,4 @@
-import { formatMovingTime } from "@/lib/utils/timeFormat";
+import { pad2, UPPER_MONTH_ABBRS } from "@/lib/utils/timeFormat";
 
 export type DistanceBucket = "5k" | "10k" | "hm" | "marathon";
 
@@ -9,15 +9,16 @@ export const DISTANCE_BUCKETS: readonly DistanceBucket[] = [
   "marathon",
 ];
 
-const BUCKET_BY_BEST_EFFORT_NAME: Record<string, DistanceBucket> = {
+const NORMALIZED_BUCKET_LOOKUP: Record<string, DistanceBucket> = {
   "5k": "5k",
   "10k": "10k",
-  "Half-Marathon": "hm",
-  Marathon: "marathon",
+  halfmarathon: "hm",
+  marathon: "marathon",
 };
 
 export function bucketFromBestEffortName(name: string): DistanceBucket | null {
-  return BUCKET_BY_BEST_EFFORT_NAME[name] ?? null;
+  const normalized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return NORMALIZED_BUCKET_LOOKUP[normalized] ?? null;
 }
 
 const BUCKET_LABELS: Record<DistanceBucket, string> = {
@@ -35,12 +36,8 @@ export function prPillText(bucket: DistanceBucket): string {
   return `NEW ${BUCKET_LABELS[bucket]} PR`;
 }
 
-function pad2(n: number): string {
-  return n < 10 ? `0${n}` : String(n);
-}
-
 export function formatDeltaSeconds(deltaSec: number): string {
-  if (!Number.isFinite(deltaSec) || deltaSec === 0) return "0s";
+  if (!Number.isFinite(deltaSec) || deltaSec === 0) return "";
   const sign = deltaSec < 0 ? "-" : "+";
   const abs = Math.abs(Math.round(deltaSec));
   if (abs < 60) return `${sign}${abs}s`;
@@ -49,15 +46,15 @@ export function formatDeltaSeconds(deltaSec: number): string {
   return `${sign}${m}:${pad2(s)}`;
 }
 
-export function formatPrTime(seconds: number): string {
-  return formatMovingTime(seconds);
-}
-
 const STREAK_THRESHOLDS = [7, 10, 14, 21, 30, 50, 100] as const;
 export type StreakThreshold = (typeof STREAK_THRESHOLDS)[number];
 
-export function streakThresholdHit(prevDays: number, nextDays: number): StreakThreshold | null {
-  for (const t of STREAK_THRESHOLDS) {
+export function streakThresholdHit(
+  prevDays: number,
+  nextDays: number,
+): StreakThreshold | null {
+  for (let i = STREAK_THRESHOLDS.length - 1; i >= 0; i--) {
+    const t = STREAK_THRESHOLDS[i];
     if (prevDays < t && nextDays >= t) return t;
   }
   return null;
@@ -70,20 +67,22 @@ export function streakPillText(days: number): string {
 const MONTHLY_THRESHOLDS = [50, 100, 150, 200, 250, 300] as const;
 export type MonthlyThreshold = (typeof MONTHLY_THRESHOLDS)[number];
 
-export function monthlyThresholdHit(prevKm: number, nextKm: number): MonthlyThreshold | null {
-  for (const t of MONTHLY_THRESHOLDS) {
+export function monthlyThresholdHit(
+  prevKm: number,
+  nextKm: number,
+): MonthlyThreshold | null {
+  for (let i = MONTHLY_THRESHOLDS.length - 1; i >= 0; i--) {
+    const t = MONTHLY_THRESHOLDS[i];
     if (prevKm < t && nextKm >= t) return t;
   }
   return null;
 }
 
-const UPPER_MONTHS = [
-  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
-];
-
-export function monthlyThresholdPillText(km: MonthlyThreshold, monthIndex: number): string {
-  return `${km}KM · ${UPPER_MONTHS[monthIndex]}`;
+export function monthlyThresholdPillText(
+  km: MonthlyThreshold,
+  monthIndex: number,
+): string {
+  return `${km}KM · ${UPPER_MONTH_ABBRS[monthIndex]}`;
 }
 
 const VOLUME_STEP_PCT = 5;

@@ -17,7 +17,7 @@ export function parseTimeToSeconds(value: string): number | null {
   return null;
 }
 
-function pad2(n: number): string {
+export function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n);
 }
 
@@ -48,11 +48,11 @@ export function formatActivityDate(iso: string): string {
   return `${SHORT_MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
 }
 
-const UPPER_MONTHS = [
+export const UPPER_MONTH_ABBRS = [
   "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
   "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
-];
+] as const;
 
 export function formatPaceDate(d: Date): string {
-  return `${UPPER_MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
+  return `${UPPER_MONTH_ABBRS[d.getUTCMonth()]} ${d.getUTCDate()}`;
 }

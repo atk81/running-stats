@@ -1,6 +1,7 @@
 import "server-only";
-import { AppwriteException, type Models, type TablesDB } from "node-appwrite";
+import { type Models, type TablesDB } from "node-appwrite";
 import { ATTRS, COLLECTIONS, DATABASE_ID } from "@/lib/appwrite/collections";
+import { getRowOrNull } from "@/lib/appwrite/rows";
 import { formatMovingTime } from "@/lib/utils/timeFormat";
 import type { BestEffort } from "@/lib/strava/types";
 import {
@@ -24,7 +25,10 @@ export interface PrUpsertSummary {
   previousBestSec: number | null;
 }
 
-export function buildPersonalRecordRowId(userId: string, bucket: DistanceBucket): string {
+export function buildPersonalRecordRowId(
+  userId: string,
+  bucket: DistanceBucket,
+): string {
   return `pr_${userId}_${bucket}`;
 }
 
@@ -34,9 +38,19 @@ export function pickPrCandidates(
   const out: Array<{ bucket: DistanceBucket; effort: BestEffort }> = [];
   for (const effort of bestEfforts) {
     if (effort.pr_rank !== 1) continue;
-    if (!Number.isFinite(effort.moving_time) || effort.moving_time <= 0) continue;
+    if (!Number.isFinite(effort.moving_time) || effort.moving_time <= 0) {
+      console.warn(
+        `[personalRecords] dropping effort id=${effort.id} name="${effort.name}" — bad moving_time=${effort.moving_time}`,
+      );
+      continue;
+    }
     const bucket = bucketFromBestEffortName(effort.name);
-    if (!bucket) continue;
+    if (!bucket) {
+      console.warn(
+        `[personalRecords] dropping effort id=${effort.id} — unknown bucket name="${effort.name}"`,
+      );
+      continue;
+    }
     out.push({ bucket, effort });
   }
   return out;
@@ -60,53 +74,57 @@ export async function upsertPersonalRecords({
   const candidates = pickPrCandidates(bestEfforts);
   if (candidates.length === 0) return [];
 
-  const summaries: PrUpsertSummary[] = [];
+  const results = await Promise.all(
+    candidates.map(({ bucket, effort }) =>
+      upsertOneBucket({ tablesDB, userId, activityId, bucket, effort, achievedAt }),
+    ),
+  );
 
-  for (const { bucket, effort } of candidates) {
-    const rowId = buildPersonalRecordRowId(userId, bucket);
-    const newBestSec = Math.round(effort.moving_time);
-
-    const existing = await loadExisting(tablesDB, rowId);
-    if (existing && newBestSec >= existing.bestTimeSec) {
-      continue;
-    }
-
-    const previousBestSec = existing?.bestTimeSec ?? null;
-    const payload: Record<string, unknown> = {
-      [ATTRS.personalRecords.userId]: userId,
-      [ATTRS.personalRecords.distanceBucket]: bucket,
-      [ATTRS.personalRecords.bestTimeSec]: newBestSec,
-      [ATTRS.personalRecords.bestTimeFormatted]: formatMovingTime(newBestSec),
-      [ATTRS.personalRecords.activityId]: activityId,
-      [ATTRS.personalRecords.achievedAt]: achievedAt,
-      [ATTRS.personalRecords.previousBestSec]: previousBestSec,
-    };
-
-    await tablesDB.upsertRow(
-      DATABASE_ID,
-      COLLECTIONS.personalRecords,
-      rowId,
-      payload,
-    );
-
-    summaries.push({ bucket, bestTimeSec: newBestSec, previousBestSec });
-  }
-
-  return summaries;
+  return results.filter((r): r is PrUpsertSummary => r !== null);
 }
 
-async function loadExisting(
-  tablesDB: TablesDB,
-  rowId: string,
-): Promise<PersonalRecordRow | null> {
-  try {
-    return await tablesDB.getRow<PersonalRecordRow>(
-      DATABASE_ID,
-      COLLECTIONS.personalRecords,
-      rowId,
-    );
-  } catch (err) {
-    if (err instanceof AppwriteException && err.code === 404) return null;
-    throw err;
+async function upsertOneBucket(args: {
+  tablesDB: TablesDB;
+  userId: string;
+  activityId: string;
+  bucket: DistanceBucket;
+  effort: BestEffort;
+  achievedAt: string;
+}): Promise<PrUpsertSummary | null> {
+  const { tablesDB, userId, activityId, bucket, effort, achievedAt } = args;
+  const rowId = buildPersonalRecordRowId(userId, bucket);
+  const newBestSec = Math.round(effort.moving_time);
+
+  const existing = await getRowOrNull<PersonalRecordRow>(
+    tablesDB,
+    DATABASE_ID,
+    COLLECTIONS.personalRecords,
+    rowId,
+  );
+
+  if (existing && newBestSec >= existing.bestTimeSec) {
+    return null;
   }
+
+  const previousBestSec = existing?.bestTimeSec ?? null;
+  const payload: Record<string, unknown> = {
+    [ATTRS.personalRecords.userId]: userId,
+    [ATTRS.personalRecords.distanceBucket]: bucket,
+    [ATTRS.personalRecords.bestTimeSec]: newBestSec,
+    [ATTRS.personalRecords.bestTimeFormatted]: formatMovingTime(newBestSec),
+    [ATTRS.personalRecords.activityId]: activityId,
+    [ATTRS.personalRecords.achievedAt]: achievedAt,
+  };
+  if (previousBestSec !== null) {
+    payload[ATTRS.personalRecords.previousBestSec] = previousBestSec;
+  }
+
+  await tablesDB.upsertRow(
+    DATABASE_ID,
+    COLLECTIONS.personalRecords,
+    rowId,
+    payload,
+  );
+
+  return { bucket, bestTimeSec: newBestSec, previousBestSec };
 }
