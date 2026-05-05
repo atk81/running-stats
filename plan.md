@@ -142,8 +142,11 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 ## Phase 4: Milestone Detection (Week 4-5)
 
 ### PR Tracking
-- [ ] Create `lib/milestones/formatters.ts` (time formatting, pace calculation, seconds↔string)
-- [ ] Implement personal_records upsert: on activity sync, read `bestEfforts` JSON, for any `pr_rank === 1` → upsert `personal_records` doc (store previous best for delta)
+- [x] Create `lib/milestones/formatters.ts` (time formatting, pace calculation, seconds↔string) <!-- PR #21: shipped as milestone-specific formatters (delta, threshold, streak, volume pill text + boundary-detection helpers + DistanceBucket); generic time helpers stayed in lib/utils/timeFormat.ts -->
+- [x] Implement personal_records upsert: on activity sync, read `bestEfforts` JSON, for any `pr_rank === 1` → upsert `personal_records` doc (store previous best for delta) <!-- PR #21: pure helper `upsertPersonalRecords` shipped in lib/milestones/personalRecords.ts. Sync-side wiring deferred until detail-fetch worker lands (sync currently writes summary-only per PR #17 drift); webhook handler (Phase 5) will also call this once it has bestEfforts. -->
+
+> **PR #21 plan drift to reconcile in Milestone Detection Engine / Integration:**
+> - Wire `upsertPersonalRecords` into the detail-fetch flow once that worker exists (per PR #17 drift). Activity sync today does NOT call it — there's no `bestEfforts` payload available pre-detail-fetch.
 
 ### Milestone Detection Engine
 - [ ] Create `lib/milestones/detector.ts`:
