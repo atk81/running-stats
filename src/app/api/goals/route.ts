@@ -7,10 +7,12 @@ import {
   BUILTIN_GOAL_KEYS,
   BUILTIN_GOAL_META,
   buildGoalRowId,
+  generateCustomGoalKey,
   type GoalKey,
 } from "@/lib/goals/defaults";
 import type { GoalRow } from "@/lib/goals/types";
 import {
+  validateCustomGoal,
   validateGoalInputs,
   type GoalInput,
   type GoalInputMap,
@@ -116,7 +118,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const inputs = raw as Partial<GoalInputMap>;
+  const body = raw as Record<string, unknown>;
+  if (body.custom !== undefined) {
+    return createCustomGoal(auth.userId, body.custom);
+  }
+  return upsertBuiltinGoals(auth.userId, body);
+}
+
+async function upsertBuiltinGoals(
+  userId: string,
+  body: Record<string, unknown>,
+): Promise<NextResponse> {
+  const inputs = body as Partial<GoalInputMap>;
   const errors = validateGoalInputs(inputs);
   if (errors.length > 0) {
     return NextResponse.json(
@@ -131,8 +144,8 @@ export async function POST(req: NextRequest) {
   try {
     const rows = await Promise.all(
       BUILTIN_GOAL_KEYS.map((key) => {
-        const id = buildGoalRowId(auth.userId, key);
-        const data = buildRowPayload(auth.userId, key, inputs[key]!, year);
+        const id = buildGoalRowId(userId, key);
+        const data = buildRowPayload(userId, key, inputs[key]!, year);
         return tablesDB.upsertRow(DATABASE_ID, COLLECTIONS.goals, id, data);
       }),
     );
@@ -140,5 +153,58 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("goals: upsert failed", err);
     return NextResponse.json({ error: "goals_upsert_failed" }, { status: 500 });
+  }
+}
+
+async function createCustomGoal(
+  userId: string,
+  custom: unknown,
+): Promise<NextResponse> {
+  const errors = validateCustomGoal(custom);
+  if (errors.length > 0) {
+    return NextResponse.json(
+      { error: "validation_failed", details: errors },
+      { status: 400 },
+    );
+  }
+  const c = custom as {
+    name: string;
+    distanceLabel?: string;
+    type: "time" | "volume" | "complete" | "count";
+    targetValue: string | number;
+  };
+
+  const year = new Date().getUTCFullYear();
+  const goalKey = generateCustomGoalKey();
+  const rowId = buildGoalRowId(userId, goalKey);
+
+  const data: Record<string, unknown> = {
+    [ATTRS.goals.userId]: userId,
+    [ATTRS.goals.goalKey]: goalKey,
+    [ATTRS.goals.name]: c.name,
+    [ATTRS.goals.type]: c.type,
+    [ATTRS.goals.distanceLabel]: c.distanceLabel ?? "",
+    [ATTRS.goals.targetValue]: String(c.targetValue),
+    [ATTRS.goals.year]: year,
+    [ATTRS.goals.isBuiltin]: false,
+    [ATTRS.goals.done]: false,
+    [ATTRS.goals.percentage]: 0,
+  };
+  if (c.type === "time") {
+    data[ATTRS.goals.targetSeconds] = parseTimeToSeconds(String(c.targetValue)) ?? 0;
+  }
+
+  try {
+    const { tablesDB } = getAdminClient();
+    const row = await tablesDB.createRow<GoalRow>(
+      DATABASE_ID,
+      COLLECTIONS.goals,
+      rowId,
+      data,
+    );
+    return NextResponse.json(row, { status: 201 });
+  } catch (err) {
+    console.error("goals: custom create failed", err);
+    return NextResponse.json({ error: "goals_create_failed" }, { status: 500 });
   }
 }

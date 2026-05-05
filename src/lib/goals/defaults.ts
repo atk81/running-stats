@@ -1,5 +1,23 @@
 export type GoalKey = "k5" | "k10" | "hm" | "volume";
-export type GoalType = "time" | "volume";
+export type GoalType = "time" | "volume" | "complete" | "count";
+
+export const GOAL_TYPES: readonly GoalType[] = ["time", "volume", "complete", "count"];
+
+export function isGoalType(value: unknown): value is GoalType {
+  return typeof value === "string" && (GOAL_TYPES as readonly string[]).includes(value);
+}
+
+export function isCustomGoalKey(key: string): boolean {
+  return key.startsWith("c_");
+}
+
+export function generateCustomGoalKey(): string {
+  const suffix = (typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID().replace(/-/g, "")
+    : Math.random().toString(36).slice(2)
+  ).slice(0, 12);
+  return `c_${suffix}`;
+}
 
 export interface GoalMeta {
   key: GoalKey;
@@ -42,6 +60,6 @@ export const BUILTIN_GOAL_META: Record<GoalKey, GoalMeta> = {
 
 export const BUILTIN_GOAL_KEYS: GoalKey[] = ["k5", "k10", "hm", "volume"];
 
-export function buildGoalRowId(userId: string, key: GoalKey): string {
+export function buildGoalRowId(userId: string, key: GoalKey | string): string {
   return `g_${userId}_${key}`;
 }

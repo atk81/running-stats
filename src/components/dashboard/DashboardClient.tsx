@@ -12,6 +12,7 @@ import {
   ProgressBar,
   ProgressRing,
 } from "@/components/primitives";
+import { PageError, PageLoading } from "@/components/chrome/PageStatus";
 import { useGoals } from "@/lib/hooks/useGoals";
 import { useActivities } from "@/lib/hooks/useActivities";
 import { useUser } from "@/lib/hooks/useUser";
@@ -71,11 +72,13 @@ export function DashboardClient() {
   }
 
   if (goalsQuery.isLoading || activitiesQuery.isLoading) {
-    return <DashboardLoading />;
+    return <PageLoading label="Loading dashboard…" />;
   }
   if (goalsQuery.isError || activitiesQuery.isError) {
     return (
-      <DashboardError
+      <PageError
+        title="Dashboard failed to load"
+        description="Could not fetch goals or activities."
         onRetry={() => {
           void Promise.all([goalsQuery.refetch(), activitiesQuery.refetch()]);
         }}
@@ -534,63 +537,3 @@ function RouterButton({ href, children }: { href: string; children: ReactNode })
   );
 }
 
-function DashboardLoading() {
-  return (
-    <div
-      style={{
-        background: "var(--ink)",
-        color: "var(--fg-3)",
-        minHeight: "calc(100vh - 56px)",
-        display: "grid",
-        placeItems: "center",
-        fontFamily: "var(--font-mono)",
-        fontSize: 12,
-        letterSpacing: "0.14em",
-        textTransform: "uppercase",
-      }}
-    >
-      Loading dashboard…
-    </div>
-  );
-}
-
-function DashboardError({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div
-      style={{
-        background: "var(--ink)",
-        color: "var(--bone)",
-        minHeight: "calc(100vh - 56px)",
-        display: "grid",
-        placeItems: "center",
-        padding: 32,
-      }}
-    >
-      <div style={{ textAlign: "center", maxWidth: 360 }}>
-        <div
-          style={{
-            fontFamily: "var(--font-heading)",
-            fontSize: 22,
-            fontWeight: 700,
-            marginBottom: 8,
-          }}
-        >
-          Dashboard failed to load
-        </div>
-        <div
-          style={{
-            fontFamily: "Inter",
-            fontSize: 13,
-            color: "var(--fg-3)",
-            marginBottom: 18,
-          }}
-        >
-          Could not fetch goals or activities.
-        </div>
-        <Button variant="primary" onClick={onRetry}>
-          <Icon name="refresh" size={16} /> Retry
-        </Button>
-      </div>
-    </div>
-  );
-}

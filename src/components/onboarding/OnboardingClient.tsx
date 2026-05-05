@@ -16,6 +16,7 @@ import { PhotoUpload } from "./PhotoUpload";
 import { StepProgress } from "./StepProgress";
 import { SyncStatusInline, type SyncStatusState } from "./SyncStatusInline";
 import {
+  BUILTIN_GOAL_KEYS,
   BUILTIN_GOAL_META,
   type GoalKey,
 } from "@/lib/goals/defaults";
@@ -65,10 +66,14 @@ function buildInitialGoalForm(rows: OnboardingInitialGoal[]): GoalFormState {
 }
 
 function fieldErrorsToMap(
-  errors: { field: GoalKey; message: string }[],
+  errors: { field: string; message: string }[],
 ): Partial<Record<GoalKey, string>> {
   const map: Partial<Record<GoalKey, string>> = {};
-  for (const e of errors) map[e.field] = e.message;
+  for (const e of errors) {
+    if ((BUILTIN_GOAL_KEYS as readonly string[]).includes(e.field)) {
+      map[e.field as GoalKey] = e.message;
+    }
+  }
   return map;
 }
 
