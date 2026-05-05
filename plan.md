@@ -108,7 +108,7 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 - [x] Create `lib/hooks/useActivities.ts` (paginated activity list) <!-- PR #18: bundled GET /api/goals + GET /api/activities since hooks can't function without them. Phase 3 GET /api/goals line ticks early. -->
 
 ### Phase 2 Verification
-- [ ] Onboarding completes, avatar visible, goals created in DB, activities synced from Strava
+- [x] Onboarding completes, avatar visible, goals created in DB, activities synced from Strava
 
 ---
 
