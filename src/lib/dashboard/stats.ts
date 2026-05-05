@@ -1,7 +1,14 @@
 import type { ActivityRow } from "@/lib/strava/activityRow";
 import type { GoalRow } from "@/lib/goals/types";
+import { BUILTIN_GOAL_KEYS, type GoalKey } from "@/lib/goals/defaults";
+import {
+  formatActivityDate,
+  formatMovingTime,
+  formatPace,
+} from "@/lib/utils/timeFormat";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const MAX_PROJECTION_DAYS = 365 * 5;
 
 export interface VolumeProjection {
   targetKm: number;
@@ -12,7 +19,7 @@ export interface VolumeProjection {
 }
 
 export interface GoalCardView {
-  goalKey: string;
+  goalKey: GoalKey;
   label: string;
   target: string;
   current: string;
@@ -59,6 +66,10 @@ export function projectVolume(
 
   const kmPerDay = currentKm / daysElapsed;
   const daysToTarget = Math.ceil(targetKm / kmPerDay);
+  if (daysToTarget > MAX_PROJECTION_DAYS) {
+    return { targetKm, currentKm, percentage, onPaceDate: null, daysEarlyOrLate: null };
+  }
+
   const onPaceMs = jan1Ms + (daysToTarget - 1) * MS_PER_DAY;
   const daysEarlyOrLate = Math.round((dec31Ms - onPaceMs) / MS_PER_DAY);
 
@@ -71,96 +82,71 @@ export function projectVolume(
   };
 }
 
-const MONTH_LABELS = [
-  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
-];
-
-export function formatPaceDate(d: Date): string {
-  return `${MONTH_LABELS[d.getUTCMonth()]} ${d.getUTCDate()}`;
-}
-
-const TIME_GOAL_LABELS: Record<string, string> = {
+const TIME_GOAL_LABELS: Record<GoalKey, string> = {
   k5: "5K",
   k10: "10K",
   hm: "HALF",
+  volume: "VOLUME",
 };
 
-export function buildGoalCardViews(
+export interface DashboardData {
+  ytdVolumeKm: number;
+  projection: VolumeProjection;
+  goalCards: GoalCardView[];
+  recentRuns: RecentRunRow[];
+}
+
+export function buildDashboardData(
+  activities: ActivityRow[],
   goals: GoalRow[],
-  ytdVolumeKm: number,
-): GoalCardView[] {
-  const order = ["k5", "k10", "hm", "volume"];
-  const byKey = new Map(goals.map((g) => [g.goalKey, g]));
+  now: Date = new Date(),
+  recentLimit = 6,
+): DashboardData {
+  const year = now.getUTCFullYear();
+  const ytdVolumeKm = ytdKm(activities, year);
+  const byKey = new Map<string, GoalRow>(goals.map((g) => [g.goalKey, g]));
+  const volumeGoal = byKey.get("volume");
+  const volumeTarget = volumeGoal ? Number(volumeGoal.targetValue) || 0 : 0;
+  const projection = projectVolume(ytdVolumeKm, volumeTarget, now);
 
-  return order
-    .map((key) => byKey.get(key))
-    .filter((g): g is GoalRow => Boolean(g))
-    .map((g): GoalCardView => {
-      if (g.goalKey === "volume") {
-        const target = Number(g.targetValue) || 0;
-        const pct = target > 0 ? Math.min(100, Math.round((ytdVolumeKm / target) * 100)) : 0;
-        return {
-          goalKey: g.goalKey,
-          label: "VOLUME",
-          target: `${target} km`,
-          current: `${ytdVolumeKm.toFixed(1)} km`,
-          percentage: pct,
-          done: pct >= 100,
-          isVolume: true,
-        };
-      }
-      return {
-        goalKey: g.goalKey,
-        label: TIME_GOAL_LABELS[g.goalKey] ?? g.goalKey.toUpperCase(),
-        target: g.targetValue,
-        current: g.currentValue ?? "—",
-        percentage: g.percentage ?? 0,
-        done: g.done,
-        isVolume: false,
-      };
+  const goalCards: GoalCardView[] = [];
+  for (const key of BUILTIN_GOAL_KEYS) {
+    const g = byKey.get(key);
+    if (!g) continue;
+    if (key === "volume") {
+      goalCards.push({
+        goalKey: key,
+        label: TIME_GOAL_LABELS[key],
+        target: `${volumeTarget} km`,
+        current: `${ytdVolumeKm.toFixed(1)} km`,
+        percentage: projection.percentage,
+        done: projection.percentage >= 100,
+        isVolume: true,
+      });
+      continue;
+    }
+    goalCards.push({
+      goalKey: key,
+      label: TIME_GOAL_LABELS[key],
+      target: g.targetValue,
+      current: g.currentValue ?? "—",
+      percentage: g.percentage ?? 0,
+      done: g.done,
+      isVolume: false,
     });
-}
+  }
 
-function pad2(n: number): string {
-  return n < 10 ? `0${n}` : String(n);
-}
+  const recentRuns = activities.slice(0, recentLimit).map(
+    (a): RecentRunRow => ({
+      id: a.stravaActivityId,
+      title: a.title || "Run",
+      date: formatActivityDate(a.date),
+      distanceKm: a.distanceKm,
+      movingTimeFormatted: formatMovingTime(a.movingTimeSec),
+      paceFormatted: formatPace(a.avgPaceSecPerKm),
+      isPR: (a.prCount ?? 0) > 0,
+    }),
+  );
 
-export function formatMovingTime(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds <= 0) return "—";
-  const total = Math.round(seconds);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  return h > 0 ? `${h}:${pad2(m)}:${pad2(s)}` : `${m}:${pad2(s)}`;
-}
-
-export function formatPace(secPerKm: number | null | undefined): string {
-  if (!secPerKm || secPerKm <= 0) return "—";
-  const m = Math.floor(secPerKm / 60);
-  const s = Math.round(secPerKm % 60);
-  return `${m}:${pad2(s)}`;
-}
-
-const SHORT_MONTHS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
-
-export function formatActivityDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return `${SHORT_MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
-}
-
-export function buildRecentRunRows(activities: ActivityRow[], limit = 6): RecentRunRow[] {
-  return activities.slice(0, limit).map((a) => ({
-    id: a.stravaActivityId,
-    title: a.title || "Run",
-    date: formatActivityDate(a.date),
-    distanceKm: a.distanceKm,
-    movingTimeFormatted: formatMovingTime(a.movingTimeSec),
-    paceFormatted: formatPace(a.avgPaceSecPerKm),
-    isPR: (a.prCount ?? 0) > 0,
-  }));
+  return { ytdVolumeKm, projection, goalCards, recentRuns };
 }
