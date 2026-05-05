@@ -88,15 +88,20 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 - [x] Mark `onboardingComplete = true` on user document after step 3
 
 ### Strava Activity Sync
-- [ ] Create `lib/strava/api.ts` (Strava API client with fetch wrapper)
-- [ ] Create `lib/strava/tokenRefresh.ts` (check expiry, refresh if needed, update user doc)
+- [x] Create `lib/strava/api.ts` (Strava API client with fetch wrapper)
+- [x] Create `lib/strava/tokenRefresh.ts` (check expiry, refresh if needed, update user doc)
 - [x] Create `lib/utils/encryption.ts` (AES-256 encrypt/decrypt for Strava tokens) <!-- pulled forward in Phase 1 Auth PR; required by callback -->
-- [ ] Implement `POST /api/strava/sync`:
-  - [ ] Fetch last 90 days of Run/TrailRun/VirtualRun activities from Strava
-  - [ ] Parse and store in `activities` collection (with bestEfforts, splitsMetric as JSON)
-  - [ ] Deduplicate by `stravaActivityId`
-  - [ ] Update `lastSyncAt` on user document
-- [ ] Build sync progress UI (polling or Appwrite Realtime)
+- [x] Implement `POST /api/strava/sync`:
+  - [x] Fetch last 90 days of Run/TrailRun/VirtualRun activities from Strava <!-- PR #17: scope expanded to full YTD (Jan 1 -> today). 90d wasn't enough for ytd volume goal. -->
+  - [x] Parse and store in `activities` collection (with bestEfforts, splitsMetric as JSON) <!-- PR #17: summary-only writes; bestEfforts/splitsMetric writes deferred to Phase 4 (require GET /activities/{id} detail-fetch + token-bucket worker per Strava 100/15min rate cap). -->
+  - [x] Deduplicate by `stravaActivityId`
+  - [x] Update `lastSyncAt` on user document
+- [x] Build sync progress UI (polling or Appwrite Realtime) <!-- PR #17: in-place inline panel during onboarding finalize, no polling — local elapsed-sec counter; synced count from POST response. -->
+
+> **PR #17 plan drift to reconcile in Phase 4:**
+> - Add new task to Phase 4: `lib/strava/fetchDetails.ts` — `GET /activities/{id}?include_all_efforts=true` wrapper.
+> - Add new task to Phase 4: detail-fetch worker / Appwrite Function with token-bucket limiter (default Strava cap = 100/15min, 1000/day; we use 60/15min to leave headroom). Iterates `processed=false` activities oldest-first.
+> - Phase 4 milestone detector should treat `prCount` from SummaryActivity as stale; recompute from fresh `best_efforts[].pr_rank` returned by detail-fetch.
 
 ### Hooks
 - [ ] Create `lib/hooks/useGoals.ts` (fetch goals for current year)

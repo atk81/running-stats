@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { Button, FieldError, Icon } from "@/components/primitives";
 import { Wordmark } from "@/components/chrome/Wordmark";
@@ -14,6 +14,7 @@ import { GoalFormState, GoalSetting } from "./GoalSetting";
 import { OnboardingStep } from "./OnboardingStep";
 import { PhotoUpload } from "./PhotoUpload";
 import { StepProgress } from "./StepProgress";
+import { SyncStatusInline, type SyncStatusState } from "./SyncStatusInline";
 import {
   BUILTIN_GOAL_META,
   type GoalKey,
@@ -27,6 +28,7 @@ import {
   useSaveGoals,
   useUploadAvatar,
 } from "@/lib/hooks/useOnboardingMutations";
+import { SyncMutationError, useSyncStrava } from "@/lib/hooks/useSyncStrava";
 
 export interface OnboardingInitialGoal {
   goalKey: GoalKey;
@@ -102,11 +104,48 @@ export function OnboardingClient({
   const uploadAvatar = useUploadAvatar();
   const saveGoals = useSaveGoals();
   const finalize = useFinalizeOnboarding();
+  const syncStrava = useSyncStrava();
+
+  const [syncState, setSyncState] = useState<SyncStatusState | null>(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const elapsedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const syncedCount = syncStrava.data?.synced ?? 0;
+  const syncErrorCode =
+    syncStrava.error instanceof SyncMutationError
+      ? syncStrava.error.code
+      : undefined;
 
   useEffect(() => {
     if (!photoPreview) return;
     return () => URL.revokeObjectURL(photoPreview);
   }, [photoPreview]);
+
+  useEffect(() => {
+    if (syncState !== "loading") {
+      if (elapsedTimerRef.current) {
+        clearInterval(elapsedTimerRef.current);
+        elapsedTimerRef.current = null;
+      }
+      return;
+    }
+    const startedAt = Date.now();
+    elapsedTimerRef.current = setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - startedAt) / 1000));
+    }, 1000);
+    return () => {
+      if (elapsedTimerRef.current) {
+        clearInterval(elapsedTimerRef.current);
+        elapsedTimerRef.current = null;
+      }
+    };
+  }, [syncState]);
+
+  useEffect(() => {
+    if (syncState !== "success") return;
+    const t = setTimeout(() => router.push("/dashboard"), 600);
+    return () => clearTimeout(t);
+  }, [syncState, router]);
 
   const onSelectFile = async (file: File) => {
     setPhotoError(null);
@@ -154,10 +193,33 @@ export function OnboardingClient({
     setAutoShare((prev) => ({ ...prev, [key]: next }));
   };
 
-  const onFinish = () => {
-    finalize.mutate(autoShare, {
-      onSuccess: () => router.push("/dashboard"),
-    });
+  const goToDashboard = () => router.push("/dashboard");
+
+  const runSync = async () => {
+    setElapsedSec(0);
+    syncStrava.reset();
+    setSyncState("loading");
+    try {
+      await syncStrava.mutateAsync();
+      setSyncState("success");
+    } catch (err) {
+      const code =
+        err instanceof SyncMutationError ? err.code : "sync_failed";
+      if (code === "sync_in_progress") {
+        goToDashboard();
+        return;
+      }
+      setSyncState("error");
+    }
+  };
+
+  const onFinish = async () => {
+    try {
+      await finalize.mutateAsync(autoShare);
+    } catch {
+      return;
+    }
+    void runSync();
   };
 
   return (
@@ -262,30 +324,46 @@ export function OnboardingClient({
               </>
             }
             footer={
-              <>
-                <Button variant="ghostLight" onClick={() => setStep(1)}>
-                  Back
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={onFinish}
-                  disabled={finalize.isPending}
-                >
-                  {finalize.isPending ? "Saving…" : "Open dashboard"}{" "}
-                  <Icon name="arrowRight" size={16} />
-                </Button>
-              </>
+              syncState ? null : (
+                <>
+                  <Button variant="ghostLight" onClick={() => setStep(1)}>
+                    Back
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={onFinish}
+                    disabled={finalize.isPending}
+                  >
+                    {finalize.isPending ? "Saving…" : "Open dashboard"}{" "}
+                    <Icon name="arrowRight" size={16} />
+                  </Button>
+                </>
+              )
             }
           >
-            <AutoSharePrefs
-              accent={accent}
-              values={autoShare}
-              onChange={onAutoShareChange}
-            />
-            {finalize.error && (
-              <FieldError style={{ marginTop: 12 }}>
-                {humanizeFinalizeError(finalize.error.message)}
-              </FieldError>
+            {syncState ? (
+              <SyncStatusInline
+                state={syncState}
+                syncedCount={syncedCount}
+                elapsedSec={syncState === "loading" ? elapsedSec : undefined}
+                errorCode={syncErrorCode}
+                onRetry={runSync}
+                onSkip={goToDashboard}
+                retryPending={syncStrava.isPending}
+              />
+            ) : (
+              <>
+                <AutoSharePrefs
+                  accent={accent}
+                  values={autoShare}
+                  onChange={onAutoShareChange}
+                />
+                {finalize.error && (
+                  <FieldError style={{ marginTop: 12 }}>
+                    {humanizeFinalizeError(finalize.error.message)}
+                  </FieldError>
+                )}
+              </>
             )}
           </OnboardingStep>
         )}

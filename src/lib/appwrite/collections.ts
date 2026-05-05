@@ -33,6 +33,7 @@ export const ATTRS = {
     autoShareWeeklyRecap: "autoShareWeeklyRecap",
     onboardingComplete: "onboardingComplete",
     lastSyncAt: "lastSyncAt",
+    syncInProgress: "syncInProgress",
   },
   goals: {
     userId: "userId",

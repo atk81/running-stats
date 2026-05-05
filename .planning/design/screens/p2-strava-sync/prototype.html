@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Strava Sync Panel — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600;700&family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink:        #0A0D10;
+    --bone:       #F4F5F7;
+    --bone-2:     #E6E8EC;
+    --bone-3:     #CDD1D8;
+    --ignite:     #FF6800;
+    --pulse-deep: #00B85C;
+    --pulse-soft: #CCFFE6;
+    --surface:    #FFFFFF;
+    --border:     #CDD1D8;
+    --fg:         #0A0D10;
+    --fg-2:       #2A2F35;
+    --fg-3:       #5A6068;
+    --font-heading: 'Archivo Narrow', system-ui, sans-serif;
+    --font-body:    'Inter', system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', SF Mono, monospace;
+    --sh-ignite:    0 4px 16px rgba(255,104,0,0.32);
+    --ease-out:     cubic-bezier(.16,1,.3,1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bone); color: var(--fg); font-family: var(--font-body); }
+  body { padding: 32px 16px 64px; }
+  .shell { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+  .device-row { display: grid; gap: 28px; grid-template-columns: 1fr; margin-bottom: 32px; }
+  @media (min-width: 1100px) { .device-row { grid-template-columns: 375px 1fr; align-items: start; } }
+  .label { font-family: var(--font-body); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); margin: 0 0 10px; }
+  .device { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: 0 1px 0 rgba(10,13,16,0.04); }
+  .device-mobile { width: 343px; }
+
+  /* Onboarding step shell mimic */
+  .step-eyebrow { font-family: var(--font-body); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-3); margin: 0 0 6px; }
+  .step-heading { font-family: var(--font-heading); font-size: 36px; line-height: 1.1; letter-spacing: -0.01em; color: var(--ink); margin: 0 0 12px; font-weight: 700; }
+  .step-desc { font-family: var(--font-body); font-size: 16px; line-height: 1.5; color: var(--fg-3); max-width: 520px; margin: 0 0 32px; }
+
+  /* Sync panel — surface card */
+  .sync-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: rs-fade-in 320ms var(--ease-out);
+  }
+  .sync-eyebrow { display: flex; align-items: center; gap: 10px; font-family: var(--font-body); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-3); margin: 0; }
+  .sync-eyebrow .icon-slot { width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; }
+  .sync-eyebrow .ok { color: var(--pulse-deep); }
+  .sync-eyebrow .warn { color: var(--ignite); }
+  .sync-heading { font-family: var(--font-heading); font-size: 24px; line-height: 1.15; letter-spacing: -0.01em; color: var(--ink); margin: 0; font-weight: 600; }
+  .sync-caption { font-family: var(--font-body); font-size: 14px; line-height: 1.5; color: var(--fg-3); max-width: 460px; margin: 0; }
+
+  /* Pulse dot */
+  .pulse-dot {
+    width: 10px; height: 10px; border-radius: 999px; background: var(--ignite);
+    box-shadow: 0 0 0 0 rgba(255,104,0,0.6);
+    animation: rs-pulse-dot 1.6s var(--ease-out) infinite;
+    flex: 0 0 auto;
+  }
+
+  /* Progress bar — fill animates 0% to 100% over 8s, shimmer overlay loops continuously */
+  .progress-track { position: relative; height: 4px; background: var(--bone-2); border-radius: 999px; overflow: hidden; }
+  .progress-fill { position: absolute; inset: 0 auto 0 0; width: 0%; background: var(--ignite); border-radius: 999px; animation: rs-bar-grow 8s var(--ease-out) forwards; }
+  .progress-shimmer { position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.7) 50%, transparent 100%); animation: rs-shimmer 1.6s linear infinite; mix-blend-mode: overlay; }
+
+  .live-count { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--fg-2); font-variant-numeric: tabular-nums; letter-spacing: 0; margin: 0; }
+
+  /* Success — token-traceable bubble using --pulse-soft */
+  .ok-icon-bubble {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 999px;
+    background: var(--pulse-soft); color: var(--pulse-deep);
+    animation: rs-spring 480ms var(--ease-out);
+  }
+
+  /* Error buttons */
+  .row-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .btn { font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 999px; border: 1px solid transparent; cursor: pointer; transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
+  .btn-primary { background: var(--ignite); color: #fff; box-shadow: var(--sh-ignite); }
+  .btn-primary:hover { transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--fg-3); border-color: transparent; }
+  .btn-ghost:hover { color: var(--ink); }
+
+  /* Keyframes — all match globals.css EXCEPT rs-pulse-dot, which is locally overridden
+     to use ignite-orange rgba (project's globals.css uses white-glow rgba intended for
+     dark surfaces). Production code must scope this override to .sync-card .pulse-dot. */
+  @keyframes rs-fade-in           { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes rs-pulse-dot         { 0% { box-shadow: 0 0 0 0 rgba(255,104,0,0.55); } 70% { box-shadow: 0 0 0 14px rgba(255,104,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,104,0,0); } }
+  @keyframes rs-shimmer           { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+  @keyframes rs-spring            { 0% { transform: scale(0.5); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes rs-bar-grow          { 0% { width: 0%; } 100% { width: 100%; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    .progress-fill { width: 50% !important; }
+  }
+
+  .section-title { font-family: var(--font-heading); font-size: 20px; color: var(--ink); margin: 0 0 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="shell" style="margin-bottom: 32px;">
+  <p class="label">runStats — Phase 2 → Strava Sync Panel</p>
+  <h1 style="font-family: var(--font-heading); font-size: 28px; margin: 0 0 6px;">Sync progress — three states</h1>
+  <p style="color: var(--fg-3); margin: 0;">In-place panel that swaps into Step 3's body during onboarding finalize. Surface card matches AutoSharePrefs.</p>
+</header>
+
+<!-- ==================== STATE 1: LOADING ==================== -->
+<section class="shell">
+  <h2 class="section-title">1. Loading state</h2>
+  <div class="device-row">
+    <div>
+      <p class="label">Mobile (375px)</p>
+      <div class="device device-mobile">
+        <p class="step-eyebrow">Step 3 of 3</p>
+        <h1 class="step-heading" style="font-size: 28px;">Auto-share?</h1>
+        <p class="step-desc">When you hit a milestone, generate a share card automatically.</p>
+        <div class="sync-card" role="status" aria-live="polite">
+          <p class="sync-eyebrow"><span class="pulse-dot"></span>STRAVA SYNC</p>
+          <h3 class="sync-heading">Pulling your runs from Strava…</h3>
+          <div class="progress-track" aria-label="Strava sync in progress">
+            <div class="progress-fill"><div class="progress-shimmer"></div></div>
+          </div>
+          <p class="sync-caption">We're grabbing your last year of activity. Usually 5-10 seconds.</p>
+          <p class="live-count">3s elapsed</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="label">Desktop (1440px shell)</p>
+      <div class="device">
+        <p class="step-eyebrow">Step 3 of 3</p>
+        <h1 class="step-heading">Auto-share?</h1>
+        <p class="step-desc">When you hit a milestone, generate a share card automatically.</p>
+        <div class="sync-card" role="status" aria-live="polite">
+          <p class="sync-eyebrow"><span class="pulse-dot"></span>STRAVA SYNC</p>
+          <h3 class="sync-heading">Pulling your runs from Strava…</h3>
+          <div class="progress-track" aria-label="Strava sync in progress">
+            <div class="progress-fill"><div class="progress-shimmer"></div></div>
+          </div>
+          <p class="sync-caption">We're grabbing your last year of activity. Usually 5-10 seconds.</p>
+          <p class="live-count">3s elapsed</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== STATE 2: SUCCESS ==================== -->
+<section class="shell">
+  <h2 class="section-title">2. Success state — 600ms hold before redirect</h2>
+  <div class="device-row">
+    <div>
+      <p class="label">Mobile (375px)</p>
+      <div class="device device-mobile">
+        <p class="step-eyebrow">Step 3 of 3</p>
+        <h1 class="step-heading" style="font-size: 28px;">Auto-share?</h1>
+        <p class="step-desc">When you hit a milestone, generate a share card automatically.</p>
+        <div class="sync-card">
+          <p class="sync-eyebrow">
+            <span class="ok-icon-bubble">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="ok">SYNCED</span>
+          </p>
+          <h3 class="sync-heading">42 runs are ready.</h3>
+          <p class="sync-caption">Heading to your dashboard…</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="label">Desktop (1440px shell)</p>
+      <div class="device">
+        <p class="step-eyebrow">Step 3 of 3</p>
+        <h1 class="step-heading">Auto-share?</h1>
+        <p class="step-desc">When you hit a milestone, generate a share card automatically.</p>
+        <div class="sync-card">
+          <p class="sync-eyebrow">
+            <span class="ok-icon-bubble">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="ok">SYNCED</span>
+          </p>
+          <h3 class="sync-heading">42 runs are ready.</h3>
+          <p class="sync-caption">Heading to your dashboard…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="label" style="margin-top: 8px; color: var(--fg-3);">Empty-year copy variant: "You're all set." / "No runs to import yet — log one on Strava and we'll catch it."</p>
+</section>
+
+<!-- ==================== STATE 3: ERROR ==================== -->
+<section class="shell">
+  <h2 class="section-title">3. Error state</h2>
+  <div class="device-row">
+    <div>
+      <p class="label">Mobile (375px) — buttons stack</p>
+      <div class="device device-mobile">
+        <p class="step-eyebrow">Step 3 of 3</p>
+        <h1 class="step-heading" style="font-size: 28px;">Auto-share?</h1>
+        <p class="step-desc">When you hit a milestone, generate a share card automatically.</p>
+        <div class="sync-card">
+          <p class="sync-eyebrow">
+            <span class="icon-slot warn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M3.5 19h17a1.5 1.5 0 0 0 1.32-2.21l-8.5-15.5a1.5 1.5 0 0 0-2.64 0l-8.5 15.5A1.5 1.5 0 0 0 3.5 19z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            STRAVA SYNC
+          </p>
+          <h3 class="sync-heading">Sync hit a snag.</h3>
+          <p class="sync-caption">Strava didn't respond. We can try again from your dashboard.</p>
+          <div class="row-actions" style="flex-direction: column; align-items: stretch;">
+            <button class="btn btn-primary">Try again</button>
+            <button class="btn btn-ghost">Skip for now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="label">Desktop (1440px shell) — buttons inline</p>
+      <div class="device">
+        <p class="step-eyebrow">Step 3 of 3</p>
+        <h1 class="step-heading">Auto-share?</h1>
+        <p class="step-desc">When you hit a milestone, generate a share card automatically.</p>
+        <div class="sync-card">
+          <p class="sync-eyebrow">
+            <span class="icon-slot warn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M3.5 19h17a1.5 1.5 0 0 0 1.32-2.21l-8.5-15.5a1.5 1.5 0 0 0-2.64 0l-8.5 15.5A1.5 1.5 0 0 0 3.5 19z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            STRAVA SYNC
+          </p>
+          <h3 class="sync-heading">Sync hit a snag.</h3>
+          <p class="sync-caption">Strava didn't respond. We can try again from your dashboard.</p>
+          <div class="row-actions">
+            <button class="btn btn-primary">Try again</button>
+            <button class="btn btn-ghost">Skip for now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
