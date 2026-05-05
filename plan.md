@@ -104,8 +104,8 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 > - Phase 4 milestone detector should treat `prCount` from SummaryActivity as stale; recompute from fresh `best_efforts[].pr_rank` returned by detail-fetch.
 
 ### Hooks
-- [ ] Create `lib/hooks/useGoals.ts` (fetch goals for current year)
-- [ ] Create `lib/hooks/useActivities.ts` (paginated activity list)
+- [x] Create `lib/hooks/useGoals.ts` (fetch goals for current year)
+- [x] Create `lib/hooks/useActivities.ts` (paginated activity list) <!-- PR #18: bundled GET /api/goals + GET /api/activities since hooks can't function without them. Phase 3 GET /api/goals line ticks early. -->
 
 ### Phase 2 Verification
 - [ ] Onboarding completes, avatar visible, goals created in DB, activities synced from Strava
@@ -126,7 +126,8 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 
 ### Goals Editor
 - [ ] Port goals screen (`GoalsScreen` in `dashboard.jsx` → `app/(app)/goals/page.tsx`)
-- [ ] Implement `GET /api/goals` (list user's goals)
+- [x] Implement `GET /api/goals` (list user's goals) <!-- shipped in PR #18 alongside hooks -->
+
 - [ ] Implement `PATCH /api/goals/[id]` (update target)
 - [ ] Implement `DELETE /api/goals/[id]` (delete custom goals only)
 - [ ] Inline editing mode for each goal card
