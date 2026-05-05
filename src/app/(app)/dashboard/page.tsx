@@ -1,11 +1,5 @@
-import { ComingSoon } from "@/components/chrome/ComingSoon";
+import { DashboardClient } from "@/components/dashboard/DashboardClient";
 
 export default function DashboardPage() {
-  return (
-    <ComingSoon
-      eyebrow="Coming in Phase 3"
-      title="Dashboard"
-      description="Volume hero, goal cards, milestone feed and recent runs land in Phase 3."
-    />
-  );
+  return <DashboardClient />;
 }

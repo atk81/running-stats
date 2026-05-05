@@ -115,14 +115,14 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 ## Phase 3: Dashboard + Goals (Week 3-4)
 
 ### Dashboard
-- [ ] Port dashboard layout (`dashboard.jsx` → `app/(app)/dashboard/page.tsx`)
-- [ ] Volume hero section with CountUp animation + ProgressRing (wired to real ytd data)
-- [ ] Goal cards row (4 built-in goals from `useGoals`)
-- [ ] Milestone feed grid (placeholder until Phase 4 — show empty state)
-- [ ] Recent runs list (from `useActivities`)
-- [ ] "Log today's run" → manual re-sync button (`POST /api/strava/sync`)
-- [ ] "Re-sync Strava" button
-- [ ] Compute derived stats: volume %, pace projections, "on pace for" date
+- [x] Port dashboard layout (`dashboard.jsx` → `app/(app)/dashboard/page.tsx`)
+- [x] Volume hero section with CountUp animation + ProgressRing (wired to real ytd data)
+- [x] Goal cards row (4 built-in goals from `useGoals`)
+- [x] Milestone feed grid (placeholder until Phase 4 — show empty state)
+- [x] Recent runs list (from `useActivities`)
+- [x] "Log today's run" → manual re-sync button (`POST /api/strava/sync`)
+- [x] "Re-sync Strava" button
+- [x] Compute derived stats: volume %, pace projections, "on pace for" date
 
 ### Goals Editor
 - [ ] Port goals screen (`GoalsScreen` in `dashboard.jsx` → `app/(app)/goals/page.tsx`)
