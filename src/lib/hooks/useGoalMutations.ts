@@ -1,34 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type { GoalRow, GoalsResponse } from "@/lib/goals/types";
 import type { GoalType } from "@/lib/goals/defaults";
+import { ApiMutationError, parseApiError } from "@/lib/api/errors";
 
-interface ApiErrorBody {
-  error?: string;
-  message?: string;
-  details?: Array<{ field: string; message: string }>;
-}
-
-export class GoalMutationError extends Error {
-  readonly code: string;
-  readonly details?: Array<{ field: string; message: string }>;
-  constructor(code: string, message: string, details?: ApiErrorBody["details"]) {
-    super(message);
-    this.name = "GoalMutationError";
-    this.code = code;
-    this.details = details;
-  }
-}
-
-async function readError(res: Response): Promise<GoalMutationError> {
-  const body = (await res.json().catch(() => null)) as ApiErrorBody | null;
-  return new GoalMutationError(
-    body?.error ?? "request_failed",
-    body?.message ?? `Request failed (${res.status})`,
-    body?.details,
-  );
-}
+export { ApiMutationError as GoalMutationError };
 
 export interface UpdateGoalInput {
   id: string;
@@ -47,18 +24,37 @@ export interface CreateCustomGoalInput {
   targetValue: string;
 }
 
-function findYearForGoal(qc: ReturnType<typeof useQueryClient>, id: string): number | null {
+function findYearForGoal(qc: QueryClient, id: string): number | null {
   const queries = qc.getQueriesData<GoalsResponse>({ queryKey: ["goals"] });
   for (const [, data] of queries) {
-    if (!data) continue;
-    if (data.goals.some((g) => g.$id === id)) return data.year;
+    if (data?.goals.some((g) => g.$id === id)) return data.year;
   }
   return null;
 }
 
+function patchCacheRow(
+  qc: QueryClient,
+  year: number,
+  id: string,
+  apply: (row: GoalRow) => GoalRow,
+): GoalsResponse | undefined {
+  const previous = qc.getQueryData<GoalsResponse>(["goals", year]);
+  if (!previous) return undefined;
+  qc.setQueryData<GoalsResponse>(["goals", year], {
+    ...previous,
+    goals: previous.goals.map((g) => (g.$id === id ? apply(g) : g)),
+  });
+  return previous;
+}
+
 export function useUpdateGoal() {
   const qc = useQueryClient();
-  return useMutation<GoalRow, GoalMutationError, UpdateGoalInput, { previous?: GoalsResponse; year: number | null }>({
+  return useMutation<
+    GoalRow,
+    ApiMutationError,
+    UpdateGoalInput,
+    { previous?: GoalsResponse; year: number | null }
+  >({
     mutationFn: async ({ id, patch }) => {
       const res = await fetch(`/api/goals/${encodeURIComponent(id)}`, {
         method: "PATCH",
@@ -66,30 +62,24 @@ export function useUpdateGoal() {
         credentials: "include",
         body: JSON.stringify(patch),
       });
-      if (!res.ok) throw await readError(res);
+      if (!res.ok) throw await parseApiError(res);
       return (await res.json()) as GoalRow;
     },
     onMutate: async ({ id, patch }) => {
       const year = findYearForGoal(qc, id);
       if (year === null) return { year };
       await qc.cancelQueries({ queryKey: ["goals", year] });
-      const previous = qc.getQueryData<GoalsResponse>(["goals", year]);
-      if (previous) {
-        qc.setQueryData<GoalsResponse>(["goals", year], {
-          ...previous,
-          goals: previous.goals.map((g) => (g.$id === id ? { ...g, ...patch } as GoalRow : g)),
-        });
-      }
+      const previous = patchCacheRow(qc, year, id, (g) => ({ ...g, ...patch }));
       return { previous, year };
+    },
+    onSuccess: (serverRow, _vars, ctx) => {
+      if (ctx?.year !== null && ctx?.year !== undefined) {
+        patchCacheRow(qc, ctx.year, serverRow.$id, () => serverRow);
+      }
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.previous && ctx.year !== null) {
         qc.setQueryData<GoalsResponse>(["goals", ctx.year], ctx.previous);
-      }
-    },
-    onSettled: (_data, _err, _vars, ctx) => {
-      if (ctx?.year !== null && ctx?.year !== undefined) {
-        void qc.invalidateQueries({ queryKey: ["goals", ctx.year] });
       }
     },
   });
@@ -97,13 +87,18 @@ export function useUpdateGoal() {
 
 export function useDeleteGoal() {
   const qc = useQueryClient();
-  return useMutation<void, GoalMutationError, string, { previous?: GoalsResponse; year: number | null }>({
+  return useMutation<
+    void,
+    ApiMutationError,
+    string,
+    { previous?: GoalsResponse; year: number | null }
+  >({
     mutationFn: async (id) => {
       const res = await fetch(`/api/goals/${encodeURIComponent(id)}`, {
         method: "DELETE",
         credentials: "include",
       });
-      if (!res.ok) throw await readError(res);
+      if (!res.ok) throw await parseApiError(res);
     },
     onMutate: async (id) => {
       const year = findYearForGoal(qc, id);
@@ -123,17 +118,12 @@ export function useDeleteGoal() {
         qc.setQueryData<GoalsResponse>(["goals", ctx.year], ctx.previous);
       }
     },
-    onSettled: (_data, _err, _id, ctx) => {
-      if (ctx?.year !== null && ctx?.year !== undefined) {
-        void qc.invalidateQueries({ queryKey: ["goals", ctx.year] });
-      }
-    },
   });
 }
 
 export function useCreateCustomGoal() {
   const qc = useQueryClient();
-  return useMutation<GoalRow, GoalMutationError, CreateCustomGoalInput>({
+  return useMutation<GoalRow, ApiMutationError, CreateCustomGoalInput>({
     mutationFn: async (input) => {
       const res = await fetch("/api/goals", {
         method: "POST",
@@ -141,7 +131,7 @@ export function useCreateCustomGoal() {
         credentials: "include",
         body: JSON.stringify({ custom: input }),
       });
-      if (!res.ok) throw await readError(res);
+      if (!res.ok) throw await parseApiError(res);
       return (await res.json()) as GoalRow;
     },
     onSuccess: (row) => {

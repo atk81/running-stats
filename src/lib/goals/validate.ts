@@ -32,18 +32,9 @@ export function validateGoalInputs(
       errors.push({ field: key, message: "missing" });
       continue;
     }
-    if (key === "volume") {
-      const raw = entry.targetValue;
-      const num = typeof raw === "string" ? Number(raw) : raw;
-      if (typeof num !== "number" || !Number.isFinite(num) || num <= 0) {
-        errors.push({ field: key, message: "must be a positive number (km)" });
-      }
-    } else {
-      const raw = entry.targetValue;
-      if (typeof raw !== "string" || parseTimeToSeconds(raw) === null) {
-        errors.push({ field: key, message: "use mm:ss or hh:mm:ss" });
-      }
-    }
+    const goalType: GoalType = key === "volume" ? "volume" : "time";
+    const err = validateTargetValue(goalType, entry.targetValue);
+    if (err) errors.push({ field: key, message: err });
   }
   return errors;
 }

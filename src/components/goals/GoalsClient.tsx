@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
-import { Button, Icon, Label, Pill, ProgressBar } from "@/components/primitives";
+import { useMemo, useRef, useState, type ReactNode } from "react";
+import { Icon, Label, Pill, ProgressBar } from "@/components/primitives";
+import { PageError, PageLoading } from "@/components/chrome/PageStatus";
 import { useGoals } from "@/lib/hooks/useGoals";
 import { useUser } from "@/lib/hooks/useUser";
 import {
-  GoalMutationError,
   useCreateCustomGoal,
   useDeleteGoal,
   useUpdateGoal,
@@ -18,6 +18,7 @@ import {
   type GoalType,
 } from "@/lib/goals/defaults";
 import type { GoalRow } from "@/lib/goals/types";
+import { formatApiError } from "@/lib/api/errors";
 
 interface PresetTemplate {
   label: string;
@@ -35,7 +36,7 @@ const PRESET_TEMPLATES: PresetTemplate[] = [
   { label: "Ultra · 100K finish", name: "Ultra 100K", type: "complete", targetValue: "finish", distanceLabel: "100 km" },
   { label: "Monthly · 100 km", name: "Monthly 100 km", type: "volume", targetValue: "100", distanceLabel: "per month" },
   { label: "Streak · 30 days", name: "30-day streak", type: "count", targetValue: "30", distanceLabel: "days in a row" },
-  { label: "Blank · custom", name: "Custom goal", type: "time", targetValue: "", distanceLabel: "" },
+  { label: "Blank · custom", name: "Custom goal", type: "time", targetValue: "0:00", distanceLabel: "" },
 ];
 
 const TYPE_SUFFIX: Record<GoalType, string> = {
@@ -69,8 +70,33 @@ export function GoalsClient() {
     [goalsQuery.data],
   );
 
-  if (goalsQuery.isLoading) return <PageLoading />;
-  if (goalsQuery.isError) return <PageError onRetry={() => void goalsQuery.refetch()} />;
+  function openEditor(id: string) {
+    updateGoal.reset();
+    setEditingId(id);
+  }
+  function closeEditor() {
+    updateGoal.reset();
+    setEditingId(null);
+  }
+  function openModal() {
+    createGoal.reset();
+    setShowAdd(true);
+  }
+  function closeModal() {
+    createGoal.reset();
+    setShowAdd(false);
+  }
+
+  if (goalsQuery.isLoading) return <PageLoading label="Loading goals…" />;
+  if (goalsQuery.isError) {
+    return (
+      <PageError
+        title="Goals failed to load"
+        description="Could not fetch your goals."
+        onRetry={() => void goalsQuery.refetch()}
+      />
+    );
+  }
 
   return (
     <div style={{ background: "var(--ink)", color: "var(--bone)", minHeight: "calc(100vh - 56px)" }}>
@@ -100,52 +126,58 @@ export function GoalsClient() {
         <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 16 }}>
           {builtins.map((g) => (
             <BuiltinCard
-              key={g.$id}
+              key={`${g.$id}:${g.$updatedAt}`}
               goal={g}
               accent={accent}
               editing={editingId === g.$id}
-              onEdit={() => setEditingId(g.$id)}
-              onDone={() => setEditingId(null)}
+              onEdit={() => openEditor(g.$id)}
+              onCancel={closeEditor}
               onSave={(targetValue) => {
-                updateGoal.mutate({ id: g.$id, patch: { targetValue } });
-                setEditingId(null);
+                if (targetValue !== g.targetValue) {
+                  updateGoal.mutate({ id: g.$id, patch: { targetValue } });
+                }
+                closeEditor();
               }}
-              saveError={editingId === g.$id ? extractError(updateGoal.error) : null}
+              saveError={editingId === g.$id ? formatApiError(updateGoal.error) : null}
             />
           ))}
           {customs.map((g) => (
             <CustomCard
-              key={g.$id}
+              key={`${g.$id}:${g.$updatedAt}`}
               goal={g}
               accent={accent}
               editing={editingId === g.$id}
-              onEdit={() => setEditingId(g.$id)}
-              onDone={() => setEditingId(null)}
+              onEdit={() => openEditor(g.$id)}
+              onCancel={closeEditor}
               onSave={(patch) => {
-                updateGoal.mutate({ id: g.$id, patch });
-                setEditingId(null);
+                const minimal = diffPatch(g, patch);
+                if (Object.keys(minimal).length > 0) {
+                  updateGoal.mutate({ id: g.$id, patch: minimal });
+                }
+                closeEditor();
               }}
               onDelete={() => {
+                if (!window.confirm(`Delete "${g.name}"? This can't be undone.`)) return;
                 deleteGoal.mutate(g.$id);
-                if (editingId === g.$id) setEditingId(null);
+                if (editingId === g.$id) closeEditor();
               }}
-              saveError={editingId === g.$id ? extractError(updateGoal.error) : null}
+              saveError={editingId === g.$id ? formatApiError(updateGoal.error) : null}
             />
           ))}
-          <AddGoalTile accent={accent} onClick={() => setShowAdd(true)} />
+          <AddGoalTile accent={accent} onClick={openModal} />
         </div>
       </div>
 
       {showAdd && (
         <AddGoalModal
-          onClose={() => setShowAdd(false)}
+          onClose={closeModal}
           onPick={(tmpl) => {
             createGoal.mutate(
               {
                 name: tmpl.name,
                 distanceLabel: tmpl.distanceLabel,
                 type: tmpl.type,
-                targetValue: tmpl.targetValue || (tmpl.type === "complete" ? "finish" : "0"),
+                targetValue: tmpl.targetValue,
               },
               {
                 onSuccess: (row) => {
@@ -156,11 +188,28 @@ export function GoalsClient() {
             );
           }}
           submitting={createGoal.isPending}
-          error={extractError(createGoal.error)}
+          error={formatApiError(createGoal.error)}
         />
       )}
     </div>
   );
+}
+
+interface CustomPatch {
+  name: string;
+  distanceLabel: string;
+  type: GoalType;
+  targetValue: string;
+}
+
+function diffPatch(g: GoalRow, p: CustomPatch): Partial<CustomPatch> {
+  const out: Partial<CustomPatch> = {};
+  const trimmedDist = p.distanceLabel.trim();
+  if (p.name !== g.name) out.name = p.name;
+  if (trimmedDist !== (g.distanceLabel ?? "")) out.distanceLabel = trimmedDist;
+  if (p.type !== (g.type as GoalType)) out.type = p.type;
+  if (p.targetValue !== g.targetValue) out.targetValue = p.targetValue;
+  return out;
 }
 
 function splitGoals(rows: GoalRow[]): { builtins: GoalRow[]; customs: GoalRow[] } {
@@ -179,28 +228,17 @@ function splitGoals(rows: GoalRow[]): { builtins: GoalRow[]; customs: GoalRow[] 
   return { builtins, customs };
 }
 
-function extractError(err: unknown): string | null {
-  if (!err) return null;
-  if (err instanceof GoalMutationError) {
-    if (err.details && err.details.length > 0) {
-      return err.details.map((d) => `${d.field}: ${d.message}`).join(" · ");
-    }
-    return err.message;
-  }
-  return null;
-}
-
 interface BuiltinCardProps {
   goal: GoalRow;
   accent: string;
   editing: boolean;
   onEdit: () => void;
-  onDone: () => void;
+  onCancel: () => void;
   onSave: (targetValue: string) => void;
   saveError: string | null;
 }
 
-function BuiltinCard({ goal, accent, editing, onEdit, onDone, onSave, saveError }: BuiltinCardProps) {
+function BuiltinCard({ goal, accent, editing, onEdit, onCancel, onSave, saveError }: BuiltinCardProps) {
   const meta = BUILTIN_GOAL_META[goal.goalKey as GoalKey];
   const [draft, setDraft] = useState(goal.targetValue);
 
@@ -211,29 +249,38 @@ function BuiltinCard({ goal, accent, editing, onEdit, onDone, onSave, saveError 
       accent={accent}
       editing={editing}
       onEdit={onEdit}
-      onDone={editing ? () => onSave(draft) : onDone}
+      onSave={() => onSave(draft)}
+      onCancel={onCancel}
     >
       {editing ? (
-        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-          <Label style={{ color: "var(--fg-3)" }}>Target</Label>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              autoFocus
-              style={editInputStyle(accent)}
-            />
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-3)" }}>
-              {TYPE_SUFFIX[meta.type]}
-            </span>
-          </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)" }}>
-            {TYPE_HELP[meta.type]}
-          </div>
+        <EditFields>
+          <FieldBlock label="Target">
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                autoFocus
+                style={editInputStyle(accent)}
+              />
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-3)" }}>
+                {TYPE_SUFFIX[meta.type]}
+              </span>
+            </div>
+          </FieldBlock>
+          <HelpLine text={TYPE_HELP[meta.type]} />
           {saveError && <ErrorLine text={saveError} />}
-        </div>
+        </EditFields>
       ) : (
-        <ReadView accent={accent} target={goal.targetValue} suffix={TYPE_SUFFIX[meta.type]} percentage={goal.percentage ?? 0} done={goal.done} current={goal.currentValue} kind="time-or-volume" />
+        <ReadView
+          accent={accent}
+          target={goal.targetValue}
+          suffix={TYPE_SUFFIX[meta.type]}
+          percentage={goal.percentage ?? 0}
+          done={goal.done}
+          current={goal.currentValue}
+          fontSize={56}
+          suffixUppercase={false}
+        />
       )}
     </GoalCardShell>
   );
@@ -244,13 +291,13 @@ interface CustomCardProps {
   accent: string;
   editing: boolean;
   onEdit: () => void;
-  onDone: () => void;
-  onSave: (patch: { name: string; distanceLabel: string; type: GoalType; targetValue: string }) => void;
+  onCancel: () => void;
+  onSave: (patch: CustomPatch) => void;
   onDelete: () => void;
   saveError: string | null;
 }
 
-function CustomCard({ goal, accent, editing, onEdit, onDone, onSave, onDelete, saveError }: CustomCardProps) {
+function CustomCard({ goal, accent, editing, onEdit, onCancel, onSave, onDelete, saveError }: CustomCardProps) {
   const goalType = (goal.type as GoalType) ?? "time";
   const [name, setName] = useState(goal.name);
   const [distanceLabel, setDistanceLabel] = useState(goal.distanceLabel ?? "");
@@ -264,11 +311,12 @@ function CustomCard({ goal, accent, editing, onEdit, onDone, onSave, onDelete, s
       accent={accent}
       editing={editing}
       onEdit={onEdit}
-      onDone={editing ? () => onSave({ name, distanceLabel, type, targetValue }) : onDone}
+      onSave={() => onSave({ name, distanceLabel, type, targetValue })}
+      onCancel={onCancel}
       onDelete={onDelete}
     >
       {editing ? (
-        <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+        <EditFields>
           <FieldBlock label="Name">
             <input value={name} onChange={(e) => setName(e.target.value)} style={textInputStyle} />
           </FieldBlock>
@@ -304,11 +352,9 @@ function CustomCard({ goal, accent, editing, onEdit, onDone, onSave, onDelete, s
               style={editInputStyle(accent)}
             />
           </FieldBlock>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)" }}>
-            {TYPE_HELP[type]}
-          </div>
+          <HelpLine text={TYPE_HELP[type]} />
           {saveError && <ErrorLine text={saveError} />}
-        </div>
+        </EditFields>
       ) : (
         <ReadView
           accent={accent}
@@ -317,11 +363,24 @@ function CustomCard({ goal, accent, editing, onEdit, onDone, onSave, onDelete, s
           percentage={goal.percentage ?? 0}
           done={goal.done}
           current={goal.currentValue}
-          kind="custom"
+          fontSize={46}
+          suffixUppercase
         />
       )}
     </GoalCardShell>
   );
+}
+
+interface GoalCardShellProps {
+  title: string;
+  sub: string;
+  accent: string;
+  editing: boolean;
+  onEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onDelete?: () => void;
+  children: ReactNode;
 }
 
 function GoalCardShell({
@@ -330,19 +389,11 @@ function GoalCardShell({
   accent,
   editing,
   onEdit,
-  onDone,
+  onSave,
+  onCancel,
   onDelete,
   children,
-}: {
-  title: string;
-  sub: string;
-  accent: string;
-  editing: boolean;
-  onEdit: () => void;
-  onDone: () => void;
-  onDelete?: () => void;
-  children: ReactNode;
-}) {
+}: GoalCardShellProps) {
   return (
     <div
       style={{
@@ -368,20 +419,19 @@ function GoalCardShell({
           </div>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
-          {onDelete && (
-            <button
-              onClick={onDelete}
-              title="Delete goal"
-              aria-label="Delete goal"
-              style={iconButtonStyle}
-            >
+          {editing && (
+            <button onClick={onCancel} aria-label="Cancel edit" style={iconButtonStyle}>
               <Icon name="close" size={12} />
             </button>
           )}
-          <button onClick={onDone} style={editButtonStyle(editing, accent)}>
+          {!editing && onDelete && (
+            <button onClick={onDelete} aria-label="Delete goal" title="Delete goal" style={iconButtonStyle}>
+              <Icon name="close" size={12} />
+            </button>
+          )}
+          <button onClick={editing ? onSave : onEdit} style={editButtonStyle(editing, accent)}>
             {editing ? "Done" : "Edit"}
           </button>
-          {!editing && onEdit !== onDone && null}
         </div>
       </div>
       {children}
@@ -389,30 +439,37 @@ function GoalCardShell({
   );
 }
 
-function ReadView({
-  accent,
-  target,
-  suffix,
-  percentage,
-  done,
-  current,
-  kind,
-}: {
+function EditFields({ children }: { children: ReactNode }) {
+  return <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>{children}</div>;
+}
+
+function HelpLine({ text }: { text: string }) {
+  return (
+    <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)" }}>
+      {text}
+    </div>
+  );
+}
+
+interface ReadViewProps {
   accent: string;
   target: string;
   suffix: string;
   percentage: number;
   done: boolean;
   current?: string;
-  kind: "time-or-volume" | "custom";
-}) {
+  fontSize: number;
+  suffixUppercase: boolean;
+}
+
+function ReadView({ accent, target, suffix, percentage, done, current, fontSize, suffixUppercase }: ReadViewProps) {
   return (
     <div style={{ marginTop: 10 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
         <div
           style={{
             fontFamily: "var(--font-display)",
-            fontSize: kind === "custom" ? 46 : 56,
+            fontSize,
             letterSpacing: "-0.02em",
             color: "var(--bone)",
             fontVariantNumeric: "tabular-nums",
@@ -426,8 +483,8 @@ function ReadView({
             fontFamily: "var(--font-mono)",
             fontSize: 12,
             color: "var(--fg-3)",
-            textTransform: kind === "custom" ? "uppercase" : "none",
-            letterSpacing: kind === "custom" ? "0.1em" : 0,
+            textTransform: suffixUppercase ? "uppercase" : "none",
+            letterSpacing: suffixUppercase ? "0.1em" : 0,
           }}
         >
           {suffix}
@@ -442,12 +499,17 @@ function ReadView({
           fontSize: 11,
           color: "var(--fg-3)",
           marginTop: 8,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
         }}
       >
-        {current && current !== "—"
-          ? `current · ${current} (${percentage}%)${done ? " · done" : ""}`
-          : "not yet started — milestones unlock once progress starts"}
-        {done && <Pill tone="pulse" style={{ marginLeft: 8 }}>DONE</Pill>}
+        <span>
+          {current && current !== "—"
+            ? `current · ${current} (${percentage}%)${done ? " · done" : ""}`
+            : "not yet started — milestones unlock once progress starts"}
+        </span>
+        {done && <Pill tone="pulse">DONE</Pill>}
       </div>
     </div>
   );
@@ -521,6 +583,17 @@ function AddGoalModal({
   submitting: boolean;
   error: string | null;
 }) {
+  const inflightRef = useRef(false);
+
+  function handlePick(tmpl: PresetTemplate) {
+    if (inflightRef.current || submitting) return;
+    inflightRef.current = true;
+    onPick(tmpl);
+    queueMicrotask(() => {
+      inflightRef.current = false;
+    });
+  }
+
   return (
     <div
       style={{
@@ -573,7 +646,7 @@ function AddGoalModal({
           {PRESET_TEMPLATES.map((p) => (
             <button
               key={p.label}
-              onClick={() => onPick(p)}
+              onClick={() => handlePick(p)}
               disabled={submitting}
               style={presetButtonStyle}
             >
@@ -676,54 +749,3 @@ const presetButtonStyle = {
   color: "var(--bone)",
   transition: "border-color 120ms, transform 120ms",
 } as const;
-
-function PageLoading() {
-  return (
-    <div
-      style={{
-        background: "var(--ink)",
-        color: "var(--fg-3)",
-        minHeight: "calc(100vh - 56px)",
-        display: "grid",
-        placeItems: "center",
-        fontFamily: "var(--font-mono)",
-        fontSize: 12,
-        letterSpacing: "0.14em",
-        textTransform: "uppercase",
-      }}
-    >
-      Loading goals…
-    </div>
-  );
-}
-
-function PageError({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div
-      style={{
-        background: "var(--ink)",
-        color: "var(--bone)",
-        minHeight: "calc(100vh - 56px)",
-        display: "grid",
-        placeItems: "center",
-        padding: 32,
-      }}
-    >
-      <div style={{ textAlign: "center", maxWidth: 360 }}>
-        <div
-          style={{
-            fontFamily: "var(--font-heading)",
-            fontSize: 22,
-            fontWeight: 700,
-            marginBottom: 8,
-          }}
-        >
-          Goals failed to load
-        </div>
-        <Button variant="primary" onClick={onRetry}>
-          <Icon name="refresh" size={16} /> Retry
-        </Button>
-      </div>
-    </div>
-  );
-}

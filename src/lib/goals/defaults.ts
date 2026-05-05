@@ -12,7 +12,10 @@ export function isCustomGoalKey(key: string): boolean {
 }
 
 export function generateCustomGoalKey(): string {
-  const suffix = Math.random().toString(36).slice(2, 10);
+  const suffix = (typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID().replace(/-/g, "")
+    : Math.random().toString(36).slice(2)
+  ).slice(0, 12);
   return `c_${suffix}`;
 }
 
