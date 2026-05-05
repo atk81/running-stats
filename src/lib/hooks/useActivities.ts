@@ -3,7 +3,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { ActivitiesResponse } from "@/lib/strava/activityRow";
 
-const STALE_MS = 60 * 1000;
+const STALE_MS = 5 * 60 * 1000;
 const DEFAULT_LIMIT = 50;
 
 interface ErrorBody {

@@ -50,15 +50,16 @@ export async function GET(req: NextRequest) {
 
   try {
     const { tablesDB } = getAdminClient();
-    const result = await tablesDB.listRows(DATABASE_ID, COLLECTIONS.goals, [
-      Query.equal(ATTRS.goals.userId, auth.userId),
-      Query.equal(ATTRS.goals.year, year),
-      Query.limit(GOALS_PAGE_LIMIT),
-    ]);
-    return NextResponse.json({
-      year,
-      goals: result.rows as unknown as GoalRow[],
-    });
+    const result = await tablesDB.listRows<GoalRow>(
+      DATABASE_ID,
+      COLLECTIONS.goals,
+      [
+        Query.equal(ATTRS.goals.userId, auth.userId),
+        Query.equal(ATTRS.goals.year, year),
+        Query.limit(GOALS_PAGE_LIMIT),
+      ],
+    );
+    return NextResponse.json({ year, goals: result.rows });
   } catch (err) {
     console.error("goals: list failed", err);
     return NextResponse.json(

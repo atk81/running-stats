@@ -35,17 +35,25 @@ export async function GET(req: NextRequest) {
     if (cursor) queries.push(Query.cursorAfter(cursor));
 
     const { tablesDB } = getAdminClient();
-    const result = await tablesDB.listRows(
+    const result = await tablesDB.listRows<ActivityRow>(
       DATABASE_ID,
       COLLECTIONS.activities,
       queries,
     );
 
-    const activities = result.rows as unknown as ActivityRow[];
+    // Cursor sentinel — when the page is exactly full we cannot tell the last
+    // page apart from the second-to-last, so the next fetch may be a 0-row
+    // request. Acceptable trade-off vs requiring an explicit `total` query.
     const nextCursor =
-      activities.length === limit ? activities[activities.length - 1].$id : null;
+      result.rows.length === limit
+        ? result.rows[result.rows.length - 1].$id
+        : null;
 
-    return NextResponse.json({ limit, nextCursor, activities });
+    return NextResponse.json({
+      limit,
+      nextCursor,
+      activities: result.rows,
+    });
   } catch (err) {
     console.error("activities: list failed", err);
     return NextResponse.json(

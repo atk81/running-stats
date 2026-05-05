@@ -1,10 +1,11 @@
 import type { Models } from "node-appwrite";
+import type { GoalType } from "./defaults";
 
 export interface GoalRow extends Models.DefaultRow {
   userId: string;
   goalKey: string;
   name: string;
-  type: "time" | "volume" | "complete" | "count";
+  type: GoalType;
   distanceLabel?: string;
   targetValue: string;
   targetSeconds?: number;
