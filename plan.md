@@ -125,14 +125,14 @@ Transform the HTML/CSS/JS prototype (`runstats/`) into a production web app serv
 - [x] Compute derived stats: volume %, pace projections, "on pace for" date
 
 ### Goals Editor
-- [ ] Port goals screen (`GoalsScreen` in `dashboard.jsx` → `app/(app)/goals/page.tsx`)
+- [x] Port goals screen (`GoalsScreen` in `dashboard.jsx` → `app/(app)/goals/page.tsx`)
 - [x] Implement `GET /api/goals` (list user's goals) <!-- shipped in PR #18 alongside hooks -->
 
-- [ ] Implement `PATCH /api/goals/[id]` (update target)
-- [ ] Implement `DELETE /api/goals/[id]` (delete custom goals only)
-- [ ] Inline editing mode for each goal card
-- [ ] "Add a goal" modal with preset templates (Marathon, Ultra, Streak, etc.)
-- [ ] Custom goal creation flow (name, distance, type, target)
+- [x] Implement `PATCH /api/goals/[id]` (update target)
+- [x] Implement `DELETE /api/goals/[id]` (delete custom goals only)
+- [x] Inline editing mode for each goal card
+- [x] "Add a goal" modal with preset templates (Marathon, Ultra, Streak, etc.)
+- [x] Custom goal creation flow (name, distance, type, target)
 
 ### Phase 3 Verification
 - [ ] Dashboard shows real volume/goals/runs, can edit goals
