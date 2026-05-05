@@ -63,6 +63,24 @@ export interface SummaryActivity {
   map?: SummaryActivityMap;
 }
 
+export interface BestEffort {
+  id: number;
+  name: string;
+  elapsed_time: number;
+  moving_time: number;
+  start_date: string;
+  start_date_local?: string;
+  distance: number;
+  pr_rank: number | null;
+}
+
+export interface DetailedActivity extends SummaryActivity {
+  best_efforts?: BestEffort[];
+  splits_metric?: unknown[];
+  splits_standard?: unknown[];
+  calories?: number;
+}
+
 export type StravaErrorCode = "auth" | "rate_limit" | "server" | "network";
 
 export class StravaError extends Error {
